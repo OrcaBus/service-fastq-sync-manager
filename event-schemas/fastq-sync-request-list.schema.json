@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Generated schema for Root",
+  "type": "object",
+  "properties": {
+    "EventBusName": {
+      "type": "string"
+    },
+    "Source": {
+      "type": "string"
+    },
+    "DetailType": {
+      "type": "string"
+    },
+    "Detail": {
+      "type": "object",
+      "properties": {
+        "taskToken": {
+          "type": "string"
+        },
+        "payload": {
+          "type": "object",
+          "oneOf": [
+            {
+              "properties": {
+                "fastqIdList": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": ["fastqIdList"]
+            },
+            {
+              "properties": {
+                "fastqSetIdList": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": ["fastqSetIdList"]
+            }
+          ],
+          "properties": {
+            "requirements": {
+              "type": "object",
+              "properties": {
+                "hasActiveReadSet": {
+                  "type": "boolean"
+                },
+                "hasQc": {
+                  "type": "boolean"
+                },
+                "hasFingerprint": {
+                  "type": "boolean"
+                },
+                "hasFileCompressionInformation": {
+                  "type": "boolean"
+                }
+              },
+              "required": []
+            },
+            "forceUnarchiving": {
+              "type": "boolean"
+            }
+          },
+          "required": ["requirements"]
+        }
+      },
+      "required": ["taskToken", "payload"]
+    }
+  },
+  "required": ["EventBusName", "Source", "DetailType", "Detail"]
+}
