@@ -13,7 +13,7 @@ export class StatefulStack extends cdk.Stack {
       githubBranch: 'main',
       githubRepo: REPO_NAME,
       stack: StatefulApplicationStack,
-      stackName: 'StatelessFastqSyncManager',
+      stackName: 'StatefulFastqSyncManager',
       stackConfig: {
         beta: getStatefulApplicationProps(),
         gamma: getStatefulApplicationProps(),
