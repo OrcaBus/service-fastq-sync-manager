@@ -57,7 +57,7 @@ proceeding with their workflow.
 
 | Name / DetailType                | Source                     | Schema Link                                                                 | Description         |
 |----------------------------------|----------------------------|-----------------------------------------------------------------------------|---------------------|
-| `FastqSync`                      | `any`                      | [fastq-sync-request](./event-schemas/fastq-sync-requirest-list.schema.json) | Announces service state changes |
+| `FastqSync`                      | `any`                      | [fastq-sync-request](./event-schemas/fastq-sync-request-list.schema.json)  | Announces service state changes |
 | `FastqListRowStateChange`        | `orcabus.fastqmanager`     | <schema link  // TODO>                                                      | Announces service state changes |
 | `FastqUnarchivingJobStateChange` | `orcabus.fastqunarchiving` | <schema link  // TODO >                                                     | Announces service state changes |
 
