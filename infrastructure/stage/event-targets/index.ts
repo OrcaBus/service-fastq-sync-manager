@@ -33,6 +33,16 @@ function buildLegacySfnEventBridgeTarget(props: AddSfnAsEventBridgeTargetProps):
   );
 }
 
+function buildFastqIdUpdatedTarget(props: AddSfnAsEventBridgeTargetProps): void {
+  props.eventBridgeRuleObj.addTarget(
+    new eventsTargets.SfnStateMachine(props.stateMachineObj, {
+      input: events.RuleTargetInput.fromObject({
+        fastqId: EventField.fromPath('$.id'),
+      }),
+    })
+  );
+}
+
 export function buildAllEventBridgeTargets(props: EventBridgeTargetsProps) {
   /* Iterate over each event bridge rule and add the target */
   for (const eventBridgeTargetsName of eventTargetsList) {
@@ -85,7 +95,7 @@ export function buildAllEventBridgeTargets(props: EventBridgeTargetsProps) {
       }
       // fastqListRowStateChangeToFastqIdUpdatedSfn
       case 'fastqListRowStateChangeToFastqIdUpdatedSfn': {
-        buildSfnEventBridgeTarget(<AddSfnAsEventBridgeTargetProps>{
+        buildFastqIdUpdatedTarget(<AddSfnAsEventBridgeTargetProps>{
           eventBridgeRuleObj: props.eventBridgeRuleObjects.find(
             (eventBridgeObject) => eventBridgeObject.ruleName === 'fastqListRowStateChange'
           )?.ruleObject,

@@ -12,7 +12,7 @@ from orcabus_api_tools.fastq import (
     get_fastq_jobs,
     run_qc_stats,
     run_file_compression_stats,
-    run_ntsm
+    run_ntsm, run_read_count_stats
 )
 
 from orcabus_api_tools.fastq.models import (
@@ -31,8 +31,9 @@ from orcabus_api_tools.fastq_unarchiving.models import (
 )
 
 from .globals import (
-    ACTIVE_STORAGE_CLASSES, BYOB_BUCKET_PREFIX_ENV_VAR,
-    REQUIREMENT
+    BYOB_BUCKET_PREFIX_ENV_VAR,
+    REQUIREMENT,
+    ACTIVE_STORAGE_CLASSES
 )
 
 
@@ -160,6 +161,9 @@ def run_fastq_job(fastq: FastqListRow, job_type: JobType) -> Optional[Job]:
     if job_type == 'FILE_COMPRESSION':
         return run_file_compression_stats(fastq_id=fastq['id'])
 
+    if job_type == 'READ_COUNT':
+        return run_read_count_stats(fastq_id=fastq['id'])
+
     raise ValueError(f"Unknown job type: {job_type}")
 
 
@@ -219,6 +223,13 @@ def check_fastq_against_requirements_list(
 
         # Check compression metadata
         if requirement_iter_ == 'hasFileCompressionInformation':
+            if has_compression_metadata(fastq_obj):
+                satisfied_requirements.append(requirement_iter_)
+            else:
+                unsatisfied_requirements.append(requirement_iter_)
+
+        # Check read-count metadata
+        if requirement_iter_ == 'hasReadCountInformation':
             if has_compression_metadata(fastq_obj):
                 satisfied_requirements.append(requirement_iter_)
             else:

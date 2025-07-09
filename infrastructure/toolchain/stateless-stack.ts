@@ -15,9 +15,9 @@ export class StatelessStack extends cdk.Stack {
       stack: StatelessApplicationStack,
       stackName: 'StatelessFastqSyncManager',
       stackConfig: {
-        beta: getStatelessApplicationProps(),
-        gamma: getStatelessApplicationProps(),
-        prod: getStatelessApplicationProps(),
+        beta: getStatelessApplicationProps('BETA'),
+        gamma: getStatelessApplicationProps('GAMMA'),
+        prod: getStatelessApplicationProps('PROD'),
       },
       pipelineName: 'StatelessFastqSyncManagerDeploymentPipeline',
       cdkSynthCmd: ['pnpm install --frozen-lockfile --ignore-scripts', 'pnpm cdk-stateless synth'],

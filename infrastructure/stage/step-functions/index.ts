@@ -23,7 +23,7 @@ import {
 } from './interfaces';
 import { camelCaseToSnakeCase } from '../utils';
 import { NagSuppressions } from 'cdk-nag';
-import { STEP_FUNCTIONS_ROOT } from '../constants';
+import { SFN_PREFIX, STEP_FUNCTIONS_ROOT } from '../constants';
 import { StateMachine } from 'aws-cdk-lib/aws-stepfunctions';
 
 /** Step Function stuff */
@@ -52,9 +52,9 @@ function createStateMachineDefinitionSubstitutions(props: SfnProps): {
 
   if (sfnRequirements.needsSfnExecutionAccess) {
     definitionSubstitutions['__launch_requirements_sfn_arn__'] =
-      `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:stateMachine:${launchFastqListRowRequirementsSfnName}`;
+      `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:stateMachine:${SFN_PREFIX}-${launchFastqListRowRequirementsSfnName}`;
     definitionSubstitutions['__initialise_task_token_for_fastq_id_list_sfn_arn__'] =
-      `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:stateMachine:${initialiseTaskTokenForFastqIdListSfnName}`;
+      `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:stateMachine:${SFN_PREFIX}-${initialiseTaskTokenForFastqIdListSfnName}`;
   }
 
   return definitionSubstitutions;
@@ -108,7 +108,7 @@ function buildStepFunction(scope: Construct, props: SfnProps): SfnObject {
 
   /* Create the state machine definition substitutions */
   const stateMachine = new sfn.StateMachine(scope, props.stateMachineName, {
-    stateMachineName: `fastq-deora-${props.stateMachineName}`,
+    stateMachineName: `${SFN_PREFIX}-${props.stateMachineName}`,
     definitionBody: sfn.DefinitionBody.fromFile(
       path.join(STEP_FUNCTIONS_ROOT, sfnNameToSnakeCase + `_sfn_template.asl.json`)
     ),
@@ -167,22 +167,20 @@ export function buildAllStepFunctions(scope: Construct, props: SfnsProps): SfnOb
     const sfnObject = <StateMachine>(
       sfnObjects.find((sfnObject) => sfnObject.stateMachineName === sfnName)?.stateMachineObject
     );
-    const launchRequirementsSfn = <StateMachine>(
-      sfnObjects.find(
-        (sfnObject) => sfnObject.stateMachineName === launchFastqListRowRequirementsSfnName
-      )?.stateMachineObject
-    );
-    const initialiseTaskTokenForFastqIdListSfn = <StateMachine>(
-      sfnObjects.find(
-        (sfnObject) => sfnObject.stateMachineName === initialiseTaskTokenForFastqIdListSfnName
-      )?.stateMachineObject
-    );
 
     /* Sfn Requirements */
     if (sfnRequirements.needsSfnExecutionAccess) {
       // Grant start execution permissions
-      launchRequirementsSfn.grantStartExecution(sfnObject);
-      initialiseTaskTokenForFastqIdListSfn.grantStartExecution(sfnObject);
+      // We use the step function name, rather than the object to prevent circular dependencies
+      sfnObject.addToRolePolicy(
+        new iam.PolicyStatement({
+          resources: [
+            `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:stateMachine:${SFN_PREFIX}-${launchFastqListRowRequirementsSfnName}`,
+            `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:stateMachine:${SFN_PREFIX}-${initialiseTaskTokenForFastqIdListSfnName}`,
+          ],
+          actions: ['states:StartExecution'],
+        })
+      );
 
       // Because we run a nested state machine, we need to add the permissions to the state machine role
       // See https://stackoverflow.com/questions/60612853/nested-step-function-in-a-step-function-unknown-error-not-authorized-to-cr

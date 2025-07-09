@@ -35,6 +35,10 @@ function buildLambda(scope: Construct, props: LambdaProps): LambdaObject {
   // Add in the fastq sync layer if required
   if (lambdaRequirements.needsFastqSyncLayer) {
     lambdaFunction.addLayers(props.fastqSyncLayer);
+    lambdaFunction.addEnvironment(
+      'BYOB_BUCKET_PREFIX',
+      `s3://${props.pipelineCacheBucketName}/${props.pipelineCacheKeyPrefix}`
+    );
   }
 
   // AwsSolutions-L1 - We'll migrate to PYTHON_3_13 ASAP, soz
@@ -85,16 +89,28 @@ export function buildAllLambdas(scope: Construct, props: BuildAllLambdaProps): L
 
 export function buildFastqSyncToolsLayer(scope: Construct): PythonLayerVersion {
   /**
-        Build the fastq sync tools layer
-        // Use getPythonUvDockerImage once we export this as a function from the
-        // platform-cdk-constructs repo
-    */
-  return new PythonLayerVersion(scope, 'bssh-lambda-layer', {
+     Build the fastq sync tools layer
+     // Use getPythonUvDockerImage once we export this as a function from the
+     // platform-cdk-constructs repo
+     */
+  return new PythonLayerVersion(scope, 'fastq-sync-tools-layer', {
     entry: path.join(LAYERS_ROOT, 'fastq_sync_tools_layer'),
     compatibleRuntimes: [lambda.Runtime.PYTHON_3_12],
     compatibleArchitectures: [lambda.Architecture.ARM_64],
     bundling: {
       image: getPythonUvDockerImage(),
+      commandHooks: {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        beforeBundling: function (inputDir: string, outputDir: string): string[] {
+          return [];
+        },
+        afterBundling(inputDir: string, outputDir: string): string[] {
+          return [
+            `pip install ${inputDir} --target ${outputDir}`,
+            `find ${outputDir} -name 'pandas' -exec rm -rf {}/tests/ \\;`,
+          ];
+        },
+      },
     },
   });
 }

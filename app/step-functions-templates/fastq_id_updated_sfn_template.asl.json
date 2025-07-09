@@ -111,11 +111,11 @@
             "Type": "Choice",
             "Choices": [
               {
-                "Next": "Task token requirement outputs",
+                "Next": "Clean Up",
                 "Condition": "{% $states.input.hasAllRequirements %}"
               }
             ],
-            "Default": "Clean Up"
+            "Default": "Task token requirement outputs"
           },
           "Clean Up": {
             "Type": "Parallel",
@@ -160,7 +160,7 @@
                     "Catch": [
                       {
                         "ErrorEquals": ["Sfn.TaskTimedOutException"],
-                        "Next": "Clean up"
+                        "Next": "Delete token from token db"
                       }
                     ]
                   },

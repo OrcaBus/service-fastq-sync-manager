@@ -27,7 +27,6 @@ def handler(event, context):
     :param context:
     :return:
     """
-
     fastq_id_list: List[str] = event.get("fastqIdList", [])
     requirements: List[REQUIREMENT] = event.get("requirements", [])
     is_unarchiving_allowed: bool = event.get("isUnarchivingAllowed", False)
@@ -38,12 +37,41 @@ def handler(event, context):
         fastq_id_list
     ))
 
-    has_all_requirements = check_fastq_list_against_requirements_list(
+    satisfied_requirements, unsatisfied_requirements = check_fastq_list_against_requirements_list(
         fastq_list=fastq_obj_list,
         requirements=requirements,
         is_unarchiving_allowed=is_unarchiving_allowed
     )
 
     return {
-        "hasAllRequirements": has_all_requirements
+        "hasAllRequirements": (True if len(unsatisfied_requirements) == 0 else False),
     }
+
+
+# if __name__ == "__main__":
+#     import json
+#     from os import environ
+#
+#     environ['AWS_PROFILE'] = 'umccr-development'
+#     environ['HOSTNAME_SSM_PARAMETER_NAME'] = '/hosted_zone/umccr/name'
+#     environ['ORCABUS_TOKEN_SECRET_ID'] = 'orcabus/token-service-jwt'
+#     environ['BYOB_BUCKET_PREFIX'] = 's3://pipeline-dev-cache-503977275616-ap-southeast-2/byob-icav2/development/'
+#
+#     print(json.dumps(
+#         handler({
+#             "fastqIdList": [
+#                 "fqr.01JQ3BEKYHYB1CBDK92X10CF3H"
+#             ],
+#             "requirements": {
+#                 "hasQc": True,
+#                 "hasFingerprint": True,
+#                 "hasActiveReadSet": True
+#             },
+#             "isUnarchivingAllowed": True
+#         }, None),
+#         indent=4
+#     ))
+#
+#     # {
+#     #     "hasAllRequirements": true
+#     # }

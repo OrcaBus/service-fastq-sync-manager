@@ -207,6 +207,52 @@
               "End": true
             }
           }
+        },
+        {
+          "StartAt": "Needs ReadCount Information",
+          "States": {
+            "Needs ReadCount Information": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Next": "Launch Read Count Information",
+                  "Condition": "{% \"hasReadCountInformation\" in $unsatisfiedRequirements %}"
+                }
+              ],
+              "Default": "Pass (3)"
+            },
+            "Launch Read Count Information": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Output": "{% $states.result.Payload %}",
+              "Arguments": {
+                "FunctionName": "${__launch_requirement_job_lambda_function_arn__}",
+                "Payload": {
+                  "fastqId": "{% $fastqId %}",
+                  "requirementType": "hasReadCountInformation"
+                }
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2,
+                  "JitterStrategy": "FULL"
+                }
+              ],
+              "End": true
+            },
+            "Pass (3)": {
+              "Type": "Pass",
+              "End": true
+            }
+          }
         }
       ],
       "End": true

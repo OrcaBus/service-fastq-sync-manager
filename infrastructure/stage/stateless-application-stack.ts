@@ -31,6 +31,8 @@ export class StatelessApplicationStack extends cdk.Stack {
     // Build the lambda functions
     const lambdaObjects = buildAllLambdas(this, {
       fastqSyncLayer: fastqSyncToolsLayer,
+      pipelineCacheBucketName: props.pipelineCacheBucketName,
+      pipelineCacheKeyPrefix: props.pipelineCacheKeyPrefix,
     });
 
     // Build the state machines

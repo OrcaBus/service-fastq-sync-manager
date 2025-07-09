@@ -45,7 +45,7 @@ def handler(event, context):
     fastq_obj = get_fastq(fastq_id, includeS3Details=True)
 
     # Launch unarchiving job
-    if check_fastq_unarchiving_job(fastq_id) and requirement_type == "hasActiveReadSet":
+    if requirement_type == "hasActiveReadSet" and check_fastq_unarchiving_job(fastq_id):
         run_fastq_unarchiving_job(
             fastq_obj
         )

@@ -5,7 +5,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry]
 name = "fastq_sync_tools"
 version = "0.0.1"
-description = "Workflow Manager Lambda Layers"
+description = "Fastq Sync Lambda Layer"
 license = "GPL-3.0-or-later"
 authors = [
     "Alexis Lucattini"

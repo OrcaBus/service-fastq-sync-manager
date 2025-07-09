@@ -59,6 +59,9 @@
                 },
                 "hasFileCompressionInformation": {
                   "type": "boolean"
+                },
+                "hasReadCount": {
+                  "type": "boolean"
                 }
               },
               "required": []

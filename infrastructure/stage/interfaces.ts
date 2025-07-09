@@ -9,4 +9,6 @@ export interface StatefulApplicationConfig {
 export interface StatelessApplicationConfig {
   eventBusName: string;
   tableName: string;
+  pipelineCacheBucketName: string;
+  pipelineCacheKeyPrefix: string;
 }

@@ -19,3 +19,6 @@ export const FASTQ_MANAGER_EVENT_SOURCE = 'orcabus.fastqmanager';
 
 export const FASTQ_UNARCHIVING_JOB_EVENT_DETAIL_TYPE = 'FastqUnarchivingJobStateChange';
 export const FASTQ_UNARCHIVING_MANAGER_EVENT_SOURCE = 'orcabus.fastqunarchivingmanager';
+
+// Step functions constants
+export const SFN_PREFIX = 'fastq-sync';
