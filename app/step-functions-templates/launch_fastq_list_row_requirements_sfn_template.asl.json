@@ -77,11 +77,22 @@
               "Type": "Choice",
               "Choices": [
                 {
-                  "Next": "Launch QC",
+                  "Next": "If read count available first",
                   "Condition": "{% \"hasQc\" in $unsatisfiedRequirements %}"
                 }
               ],
               "Default": "Pass"
+            },
+            "If read count available first": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Next": "Launch QC",
+                  "Condition": "{% /* Has Read Count */\n(\n  $fastqObj.readCount ? true : false and\n  $fastqObj.baseCountEst ? true : false\n) and \n/* Not already launching read count */\n$not(\"hasReadCountInformation\" in $unsatisfiedRequirements) %}",
+                  "Comment": "Ensure readcount exists before getting qc stats"
+                }
+              ],
+              "Default": "Pass (6)"
             },
             "Launch QC": {
               "Type": "Task",
@@ -108,6 +119,10 @@
                   "JitterStrategy": "FULL"
                 }
               ],
+              "End": true
+            },
+            "Pass (6)": {
+              "Type": "Pass",
               "End": true
             },
             "Pass": {
@@ -169,11 +184,22 @@
               "Type": "Choice",
               "Choices": [
                 {
-                  "Next": "Launch Compression Information",
+                  "Next": "Check if readcount is available first",
                   "Condition": "{% \"hasFileCompressionInformation\" in $unsatisfiedRequirements %}"
                 }
               ],
               "Default": "Pass (1)"
+            },
+            "Check if readcount is available first": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Next": "Launch Compression Information",
+                  "Condition": "{% /* Has Read Count */\n(\n  $fastqObj.readCount ? true : false and\n  $fastqObj.baseCountEst ? true : false\n) and \n/* Not already launching read count */\n$not(\"hasReadCountInformation\" in $unsatisfiedRequirements) %}",
+                  "Comment": "Has readcount info and readcount info not in requirements"
+                }
+              ],
+              "Default": "Pass (5)"
             },
             "Launch Compression Information": {
               "Type": "Task",
@@ -200,6 +226,10 @@
                   "JitterStrategy": "FULL"
                 }
               ],
+              "End": true
+            },
+            "Pass (5)": {
+              "Type": "Pass",
               "End": true
             },
             "Pass (1)": {
