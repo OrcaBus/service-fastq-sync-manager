@@ -16,8 +16,8 @@ from orcabus_api_tools.fastq import (
 )
 
 from orcabus_api_tools.fastq.models import (
-    JobStatus, Job, JobType,
-    FastqListRow
+    Job, JobType,
+    Fastq
 )
 
 from orcabus_api_tools.fastq_unarchiving import (
@@ -27,7 +27,6 @@ from orcabus_api_tools.fastq_unarchiving import (
 
 from orcabus_api_tools.fastq_unarchiving.models import (
     Job as UnarchivingJob,
-    JobStatus as UnarchivingJobStatus
 )
 
 from .globals import (
@@ -37,7 +36,7 @@ from .globals import (
 )
 
 
-def has_active_readset(fastq_obj: 'FastqListRow') -> bool:
+def has_active_readset(fastq_obj: 'Fastq') -> bool:
     if fastq_obj['readSet'] is None:
         return False
 
@@ -60,15 +59,15 @@ def has_active_readset(fastq_obj: 'FastqListRow') -> bool:
     return True
 
 
-def has_qc(fastq_obj: FastqListRow) -> bool:
+def has_qc(fastq_obj: Fastq) -> bool:
     return fastq_obj['qc'] is not None
 
 
-def has_fingerprint(fastq_obj: FastqListRow) -> bool:
+def has_fingerprint(fastq_obj: Fastq) -> bool:
     return fastq_obj['ntsm'] is not None
 
 
-def has_compression_metadata(fastq_obj: FastqListRow) -> bool:
+def has_compression_metadata(fastq_obj: Fastq) -> bool:
     # Check active readset
     if not has_active_readset(fastq_obj):
         return False
@@ -94,6 +93,12 @@ def has_compression_metadata(fastq_obj: FastqListRow) -> bool:
     return True
 
 
+def has_read_count_metadata(fastq_obj: Fastq) -> bool:
+    if fastq_obj['readCount'] is None or fastq_obj['baseCountEst'] is None:
+        return False
+    return True
+
+
 def check_fastq_job(fastq_id: str, job_type: JobType) -> bool:
     """
     Check the fastq doesn't already have jobs running for this particular type
@@ -106,10 +111,10 @@ def check_fastq_job(fastq_id: str, job_type: JobType) -> bool:
                 list(filter(
                     lambda job_iter_: (
                             (
-                                    JobType(job_iter_['jobType']) == job_type
+                                    job_iter_['jobType'] == job_type
                             ) and
                             (
-                                    JobStatus(job_iter_['status']) in [JobStatus.PENDING, JobStatus.RUNNING]
+                                    job_iter_['status'] in ['PENDING', 'RUNNING']
                             )
                     ),
                     get_fastq_jobs(fastq_id)
@@ -128,15 +133,15 @@ def check_fastq_unarchiving_job(fastq_id: str) -> bool:
     """
     return (
             (
-                len(get_job_list_for_fastq(fastq_id, UnarchivingJobStatus.PENDING)) == 0
+                    len(get_job_list_for_fastq(fastq_id, 'PENDING')) == 0
             ) and
             (
-                len(get_job_list_for_fastq(fastq_id, UnarchivingJobStatus.RUNNING)) == 0
+                    len(get_job_list_for_fastq(fastq_id, 'RUNNING')) == 0
             )
     )
 
 
-def run_fastq_job(fastq: FastqListRow, job_type: JobType) -> Optional[Job]:
+def run_fastq_job(fastq: Fastq, job_type: JobType) -> Optional[Job]:
     """
     Run a job for a fastq
     :param fastq:
@@ -167,7 +172,7 @@ def run_fastq_job(fastq: FastqListRow, job_type: JobType) -> Optional[Job]:
     raise ValueError(f"Unknown job type: {job_type}")
 
 
-def run_fastq_unarchiving_job(fastq: FastqListRow) -> Optional[UnarchivingJob]:
+def run_fastq_unarchiving_job(fastq: Fastq) -> Optional[UnarchivingJob]:
     create_unarchiving_job(
         fastq_ids=[
             fastq['id']
@@ -177,7 +182,7 @@ def run_fastq_unarchiving_job(fastq: FastqListRow) -> Optional[UnarchivingJob]:
 
 
 def check_fastq_against_requirements_list(
-        fastq_obj: FastqListRow,
+        fastq_obj: Fastq,
         requirements: List[REQUIREMENT],
         is_unarchiving_allowed: bool = False
 ) -> Tuple[List[REQUIREMENT], List[REQUIREMENT]]:
@@ -230,7 +235,7 @@ def check_fastq_against_requirements_list(
 
         # Check read-count metadata
         if requirement_iter_ == 'hasReadCountInformation':
-            if has_compression_metadata(fastq_obj):
+            if has_read_count_metadata(fastq_obj):
                 satisfied_requirements.append(requirement_iter_)
             else:
                 unsatisfied_requirements.append(requirement_iter_)
@@ -240,7 +245,7 @@ def check_fastq_against_requirements_list(
 
 
 def check_fastq_list_against_requirements_list(
-        fastq_list: List[FastqListRow],
+        fastq_list: List[Fastq],
         requirements: List[REQUIREMENT],
         is_unarchiving_allowed: bool = False,
 ) -> Tuple[List[REQUIREMENT], List[REQUIREMENT]]:
