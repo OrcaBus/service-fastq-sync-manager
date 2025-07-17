@@ -14,7 +14,7 @@ export const FASTQ_SYNC_LEGACY_EVENT_DETAIL_TYPE = 'fastqSync';
 export const FASTQ_SYNC_EVENT_DETAIL_TYPE = 'FastqSync';
 
 // External events to listen to
-export const FASTQ_LIST_ROW_STATE_CHANGE_EVENT_DETAIL_TYPE = 'FastqListRowStateChange';
+export const FASTQ_STATE_CHANGE_EVENT_DETAIL_TYPE = 'FastqStateChange';
 export const FASTQ_MANAGER_EVENT_SOURCE = 'orcabus.fastqmanager';
 
 export const FASTQ_UNARCHIVING_JOB_EVENT_DETAIL_TYPE = 'FastqUnarchivingJobStateChange';

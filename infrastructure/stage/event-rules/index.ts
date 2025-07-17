@@ -1,7 +1,7 @@
 import { EventPattern } from 'aws-cdk-lib/aws-events';
 import * as events from 'aws-cdk-lib/aws-events';
 import {
-  FASTQ_LIST_ROW_STATE_CHANGE_EVENT_DETAIL_TYPE,
+  FASTQ_STATE_CHANGE_EVENT_DETAIL_TYPE,
   FASTQ_SYNC_EVENT_DETAIL_TYPE,
   FASTQ_SYNC_LEGACY_EVENT_DETAIL_TYPE,
 } from '../constants';
@@ -61,7 +61,7 @@ function createNewFastqSetIdListEventSyncEventPattern(): EventPattern {
 function createFastqListRowStateChangeEventPattern(): EventPattern {
   return {
     source: [FASTQ_MANAGER_EVENT_SOURCE],
-    detailType: [FASTQ_LIST_ROW_STATE_CHANGE_EVENT_DETAIL_TYPE],
+    detailType: [FASTQ_STATE_CHANGE_EVENT_DETAIL_TYPE],
     detail: {
       status: [
         { 'equals-ignore-case': 'READ_SET_ADDED' },
@@ -135,7 +135,7 @@ export function buildAllEventRules(
       }
 
       // Fastq List Row state change event
-      case 'fastqListRowStateChange': {
+      case 'fastqStateChange': {
         eventRulesList.push({
           ruleName: eventRule,
           ruleObject: new events.Rule(scope, eventRule, {

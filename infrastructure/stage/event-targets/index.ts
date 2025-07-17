@@ -97,7 +97,7 @@ export function buildAllEventBridgeTargets(props: EventBridgeTargetsProps) {
       case 'fastqListRowStateChangeToFastqIdUpdatedSfn': {
         buildFastqIdUpdatedTarget(<AddSfnAsEventBridgeTargetProps>{
           eventBridgeRuleObj: props.eventBridgeRuleObjects.find(
-            (eventBridgeObject) => eventBridgeObject.ruleName === 'fastqListRowStateChange'
+            (eventBridgeObject) => eventBridgeObject.ruleName === 'fastqStateChange'
           )?.ruleObject,
           stateMachineObj: props.stepFunctionObjects.find(
             (eventBridgeObject) => eventBridgeObject.stateMachineName === 'fastqIdUpdated'

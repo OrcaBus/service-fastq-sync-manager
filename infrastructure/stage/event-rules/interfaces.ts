@@ -11,7 +11,7 @@ export type EventRuleName =
   | 'fastqSyncTaskTokenInitialisedRule'
   | 'fastqSetSyncTaskTokenInitialisedRule'
   // Fastq List row updated
-  | 'fastqListRowStateChange'
+  | 'fastqStateChange'
   // Fastq Unarchiving updated
   | 'fastqUnarchivingStateChange';
 
@@ -22,7 +22,7 @@ export const eventRuleNameList: EventRuleName[] = [
   'fastqSyncTaskTokenInitialisedRule',
   'fastqSetSyncTaskTokenInitialisedRule',
   // Fastq List row updated
-  'fastqListRowStateChange',
+  'fastqStateChange',
   // Fastq Unarchiving updated
   'fastqUnarchivingStateChange',
 ];
