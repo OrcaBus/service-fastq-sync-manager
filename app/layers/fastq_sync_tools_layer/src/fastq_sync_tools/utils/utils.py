@@ -173,7 +173,7 @@ def run_fastq_job(fastq: Fastq, job_type: JobType) -> Optional[Job]:
 
 
 def run_fastq_unarchiving_job(fastq: Fastq) -> Optional[UnarchivingJob]:
-    create_unarchiving_job(
+    return create_unarchiving_job(
         fastq_ids=[
             fastq['id']
         ],
