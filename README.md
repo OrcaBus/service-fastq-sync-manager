@@ -1,80 +1,157 @@
-Template Service
+Fastq Sync Manager
 ================================================================================
 
-- [Template Service](#template-service)
-  - [Service Description](#service-description)
-    - [Name \& responsibility](#name--responsibility)
-    - [Description](#description)
-    - [API Endpoints](#api-endpoints)
-    - [Consumed Events](#consumed-events)
-    - [Published Events](#published-events)
-    - [(Internal) Data states \& persistence model](#internal-data-states--persistence-model)
-    - [Major Business Rules](#major-business-rules)
-    - [Permissions \& Access Control](#permissions--access-control)
-    - [Change Management](#change-management)
-      - [Versioning strategy](#versioning-strategy)
-      - [Release management](#release-management)
-  - [Infrastructure \& Deployment](#infrastructure--deployment)
-    - [Stateful](#stateful)
-    - [Stateless](#stateless)
-    - [CDK Commands](#cdk-commands)
-    - [Stacks](#stacks)
-  - [Development](#development)
-    - [Project Structure](#project-structure)
-    - [Setup](#setup)
-      - [Requirements](#requirements)
-      - [Install Dependencies](#install-dependencies)
-      - [First Steps](#first-steps)
-    - [Conventions](#conventions)
-    - [Linting \& Formatting](#linting--formatting)
-    - [Testing](#testing)
-  - [Glossary \& References](#glossary--references)
+- [Service Description](#service-description)
+  - [Events Overview](#events-overview)
+  - [Consumed Events](#consumed-events)
+    - [Legacy Method](#legacy-method)
+    - [New Method(s)](#new-methods)
+  - [Change Management](#change-management)
+    - [Release management](#release-management)
+- [Infrastructure \& Deployment](#infrastructure--deployment)
+  - [Stateful](#stateful)
+  - [Stateless](#stateless)
+  - [CDK Commands](#cdk-commands)
+  - [Stacks](#stacks)
+- [Development](#development)
+  - [Project Structure](#project-structure)
+  - [Setup](#setup)
+    - [Requirements](#requirements)
+    - [Install Dependencies](#install-dependencies)
+    - [First Steps](#first-steps)
+  - [Conventions](#conventions)
+  - [Linting \& Formatting](#linting--formatting)
+  - [Testing](#testing)
+- [Glossary \& References](#glossary--references)
+
 
 
 Service Description
 --------------------------------------------------------------------------------
 
-### Name & responsibility
+The fastq sync service is a valuable component of the OrcaBus platform, particularly for workflow orchestration services.
 
-### Description
+The service allows other step functions across the platform to 'hang' at a certain point in their execution,
+waiting for primary data to be available in a specific capacity before proceeding with their workflow.
 
-### API Endpoints
+This can include -
+  * waiting for a fastq id to be restored from archive
+  * waiting for a fastq id to contain a valid read set
+  * waiting for a fastq id to contain qc data
 
-This service provides a RESTful API following OpenAPI conventions. 
-The Swagger documentation of the production endpoint is available here: 
+This is particularly useful for services that need to wait for external events or conditions before
+proceeding with their workflow.
+
+
+### Events Overview
+
+![Fastq Sync Service Events](./docs/draw-io-exports/fastq-sync.drawio.svg)
 
 
 ### Consumed Events
 
-| Name / DetailType | Source         | Schema Link       | Description         |
-|-------------------|----------------|-------------------|---------------------|
-| `SomeServiceStateChange` | `orcabus.someservice` | <schema link> | Announces service state changes |
-
-### Published Events
-
-| Name / DetailType | Source         | Schema Link       | Description         |
-|-------------------|----------------|-------------------|---------------------|
-| `TemplateStateChange` | `orcabus.templatemanager` | <schema link> | Announces Template data state changes |
+| Name / DetailType                | Source                     | Schema Link                                                                 | Description         |
+|----------------------------------|----------------------------|-----------------------------------------------------------------------------|---------------------|
+| `FastqSync`                      | `any`                      | [fastq-sync-request](./event-schemas/fastq-sync-request-list.schema.json)  | Announces service state changes |
+| `FastqListRowStateChange`        | `orcabus.fastqmanager`     | <schema link  // TODO>                                                      | Announces service state changes |
+| `FastqUnarchivingJobStateChange` | `orcabus.fastqunarchiving` | <schema link  // TODO >                                                     | Announces service state changes |
 
 
-### (Internal) Data states & persistence model
+#### Legacy Method
 
-### Major Business Rules
+```json5
+{
+  "EventBusName": "OrcaBusMain",
+  "Source": "any",
+  // Note detail type value is in camelCase
+  "DetailType": "fastqSync",
+  "Detail": {
+    // Task Token
+    "taskToken": "string",
+    // Supports only a single fastq set id
+    "fastqSetId": "fqs.12345",
+    "requirements": {
+      "hasActiveReadSet": true,
+      // Other requirements
+    },
+    "forceUnarchiving": true
+  }
+}
+```
 
-### Permissions & Access Control
+
+#### New Method(s)
+
+Now we use two new methods to handle fastq sync requests:
+
+**FastqIdList**
+
+```json5
+{
+  "EventBusName": "OrcaBusMain",
+  "Source": "any",
+  // Note detail type value is now in PascalCase
+  // Which is consistent with the rest of the platform
+  "DetailType": "FastqSync",
+  "Detail": {
+    // Task Token
+    "taskToken": "string",
+    // Payload
+    // All other keys are now under the `payload` key
+    "payload": {
+      // Supports a list of fastq ids
+      "fastqIdList": [
+        "fqr.12345",
+        "fqr.67890"
+      ],
+      "requirements": {
+        "hasActiveReadSet": true,
+        // ...
+      },
+      "forceUnarchiving": true
+    }
+  }
+}
+```
+
+**FastqSetIdList**
+
+```json5
+{
+  "EventBusName": "OrcaBusMain",
+  "Source": "any",
+  // Note detail type value is now in PascalCase
+  // Which is consistent with the rest of the platform
+  "DetailType": "FastqSync",
+  "Detail": {
+    // Task Token
+    "taskToken": "string",
+    // Payload
+    // All other keys are now under the `payload` key
+    "payload": {
+      // Supports a list of fastq set ids
+      "fastqSetIdList": [
+        "fqs.12345",
+        "fqs.67890"
+      ],
+      "requirements": {
+        "hasActiveReadSet": true,
+        // ...
+      },
+      "forceUnarchiving": true
+    }
+  }
+}
+```
 
 ### Change Management
-
-#### Versioning strategy
-
-E.g. Manual tagging of git commits following Semantic Versioning (semver) guidelines.
 
 #### Release management
 
 The service employs a fully automated CI/CD pipeline that automatically builds and releases all changes to the `main` code branch.
 
 
-Infrastructure & Deployment 
+Infrastructure & Deployment
 --------------------------------------------------------------------------------
 
 Short description with diagrams where appropriate.
@@ -211,7 +288,7 @@ make fix
 ### Testing
 
 
-Unit tests are available for most of the business logic. Test code is hosted alongside business in `/tests/` directories.  
+Unit tests are available for most of the business logic. Test code is hosted alongside business in `/tests/` directories.
 
 ```sh
 make test
@@ -228,4 +305,3 @@ Service specific terms:
 |-----------|--------------------------------------------------|
 | Foo | ... |
 | Bar | ... |
-
