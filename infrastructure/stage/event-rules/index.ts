@@ -68,6 +68,7 @@ function createFastqListRowStateChangeEventPattern(): EventPattern {
         { 'equals-ignore-case': 'FILE_COMPRESSION_UPDATED' },
         { 'equals-ignore-case': 'QC_UPDATED' },
         { 'equals-ignore-case': 'NTSM_UPDATED' },
+        { 'equals-ignore-case': 'READ_COUNT_UPDATED' },
       ],
     },
   };

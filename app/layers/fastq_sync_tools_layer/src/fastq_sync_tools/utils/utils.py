@@ -7,6 +7,7 @@ Bunch of useful helper functions for lambdas in the fastq sync service
 
 from os import environ
 from typing import Optional, List, Tuple
+import logging
 
 from orcabus_api_tools.fastq import (
     get_fastq_jobs,
@@ -34,6 +35,8 @@ from .globals import (
     REQUIREMENT,
     ACTIVE_STORAGE_CLASSES
 )
+
+logger = logging.getLogger(__name__)
 
 
 def has_active_readset(fastq_obj: 'Fastq') -> bool:
@@ -150,6 +153,7 @@ def run_fastq_job(fastq: Fastq, job_type: JobType) -> Optional[Job]:
     """
     # Check that the fastq list row has an active read set
     if not has_active_readset(fastq):
+        logger.warning("No active read set for fastq %s" % fastq)
         return None
 
     # Check if the job is already running
