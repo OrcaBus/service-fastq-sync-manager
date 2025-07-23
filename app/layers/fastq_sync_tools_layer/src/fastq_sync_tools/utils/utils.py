@@ -153,7 +153,7 @@ def run_fastq_job(fastq: Fastq, job_type: JobType) -> Optional[Job]:
     """
     # Check that the fastq list row has an active read set
     if not has_active_readset(fastq):
-        logging.warning("No active read set for fastq %s" % fastq)
+        logger.warning("No active read set for fastq %s" % fastq)
         return None
 
     # Check if the job is already running
