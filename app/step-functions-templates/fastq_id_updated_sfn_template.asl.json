@@ -311,7 +311,7 @@
       "Arguments": {
         "StateMachineArn": "${__launch_requirements_sfn_arn__}",
         "Input": {
-          "fastqListRowId": "{% $fastqId %}",
+          "fastqId": "{% $fastqId %}",
           "requirements": "{% $requirementsSet %}"
         }
       },

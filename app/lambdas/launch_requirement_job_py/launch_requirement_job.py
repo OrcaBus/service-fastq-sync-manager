@@ -46,19 +46,24 @@ def handler(event, context):
 
     # Launch unarchiving job
     if requirement_type == "hasActiveReadSet" and check_fastq_unarchiving_job(fastq_id):
-        run_fastq_unarchiving_job(
+        return run_fastq_unarchiving_job(
             fastq_obj
         )
 
     # Run internal jobs
     if check_fastq_job(fastq_id, "QC") and requirement_type == "hasQc":
-        run_fastq_job(fastq_obj, "QC")
+        return run_fastq_job(fastq_obj, "QC")
 
     if check_fastq_job(fastq_id, "NTSM") and requirement_type == "hasFingerprint":
-        run_fastq_job(fastq_obj, "NTSM")
+        return run_fastq_job(fastq_obj, "NTSM")
 
     if check_fastq_job(fastq_id, "FILE_COMPRESSION") and requirement_type == "hasFileCompressionInformation":
-        run_fastq_job(fastq_obj, "FILE_COMPRESSION")
+        return run_fastq_job(fastq_obj, "FILE_COMPRESSION")
+
+    if check_fastq_job(fastq_id, "READ_COUNT") and requirement_type == "hasReadCountInformation":
+        return run_fastq_job(fastq_obj, "READ_COUNT")
+
+    raise ValueError("Incorrect requirement type or fastqId not found.")
 
 
 
@@ -80,3 +85,24 @@ def handler(event, context):
 #         ),
 #         indent=4
 #     ))
+
+
+# if __name__ == "__main__":
+#     import json
+#     from os import environ
+#     environ['AWS_PROFILE'] = 'umccr-production'
+#     environ['AWS_REGION'] = 'ap-southeast-2'
+#     environ['HOSTNAME_SSM_PARAMETER_NAME'] = '/hosted_zone/umccr/name'
+#     environ['ORCABUS_TOKEN_SECRET_ID'] = 'orcabus/token-service-jwt'
+#     environ['BYOB_BUCKET_PREFIX'] = 's3://pipeline-prod-cache-503977275616-ap-southeast-2/byob-icav2/production/'
+#     print(json.dumps(
+#         handler(
+#             {
+#                 "fastqId": "fqr.01JN25H1FC6KWEJAXM5KHP1DZP",
+#                 "requirementType": "hasReadCountInformation"
+#             },
+#             None
+#         ),
+#         indent=4
+#     ))
+#

@@ -37,7 +37,7 @@ function buildFastqIdUpdatedTarget(props: AddSfnAsEventBridgeTargetProps): void 
   props.eventBridgeRuleObj.addTarget(
     new eventsTargets.SfnStateMachine(props.stateMachineObj, {
       input: events.RuleTargetInput.fromObject({
-        fastqId: EventField.fromPath('$.id'),
+        fastqId: EventField.fromPath('$.detail.id'),
       }),
     })
   );
