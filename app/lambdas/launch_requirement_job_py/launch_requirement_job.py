@@ -63,9 +63,8 @@ def handler(event, context):
     if check_fastq_job(fastq_id, "READ_COUNT") and requirement_type == "hasReadCountInformation":
         return run_fastq_job(fastq_obj, "READ_COUNT")
 
-    raise ValueError("Incorrect requirement type or fastqId not found.")
-
-
+    # If we reach here, we have no job to run
+    return None
 
 # if __name__ == "__main__":
 #     import json
