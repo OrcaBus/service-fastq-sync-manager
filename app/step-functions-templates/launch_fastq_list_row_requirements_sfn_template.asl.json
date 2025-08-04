@@ -7,7 +7,8 @@
       "Next": "Get fastq list row and remaining requirements",
       "Assign": {
         "fastqId": "{% $states.input.fastqId %}",
-        "requirements": "{% $states.input.requirements %}"
+        "requirements": "{% $states.input.requirements %}",
+        "isUnarchivingAllowed": "{% $states.input.isUnarchivingAllowed %}"
       }
     },
     "Get fastq list row and remaining requirements": {
@@ -17,7 +18,8 @@
         "FunctionName": "${__get_fastq_and_remaining_requirements_lambda_function_arn__}",
         "Payload": {
           "fastqId": "{% $fastqId %}",
-          "requirements": "{% $requirements %}"
+          "requirements": "{% $requirements %}",
+          "isUnarchivingAllowed": "{% $isUnarchivingAllowed %}"
         }
       },
       "Retry": [
