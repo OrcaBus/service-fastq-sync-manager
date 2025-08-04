@@ -25,6 +25,7 @@ def handler(event, context):
     """
     fastq_id: str = event.get("fastqId")
     requirements: List[REQUIREMENT] = event.get("requirements", [])
+    is_unarchiving_allowed: bool = event.get("isUnarchivingAllowed", False)
 
     if not fastq_id:
         raise ValueError("fastqId is required")
@@ -34,7 +35,8 @@ def handler(event, context):
     satisfied_requirements, unsatisfied_requirements = (
         check_fastq_against_requirements_list(
             fastq_obj=fastq_obj,
-            requirements=requirements
+            requirements=requirements,
+            is_unarchiving_allowed=is_unarchiving_allowed
         )
     )
 

@@ -235,7 +235,8 @@
               "StateMachineArn": "${__launch_requirements_sfn_arn__}",
               "Input": {
                 "fastqId": "{% $states.input.fastqIdMapIter %}",
-                "requirements": "{% $states.input.requirementsListMapIter %}"
+                "requirements": "{% $states.input.requirementsListMapIter %}",
+                "isUnarchivingAllowed": "{% $isUnarchivingAllowed %}"
               }
             },
             "End": true
