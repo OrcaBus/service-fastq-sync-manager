@@ -8,7 +8,7 @@
       "Assign": {
         "fastqId": "{% $states.input.fastqId %}",
         "requirements": "{% $states.input.requirements %}",
-        "isUnarchivingAllowed": "{% $states.input.isUnarchivingAllowed %}"
+        "isUnarchivingAllowed": "{% $states.input.isUnarchivingAllowed ? $states.input.isUnarchivingAllowed : false %}"
       }
     },
     "Get fastq list row and remaining requirements": {
