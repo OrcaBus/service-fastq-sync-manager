@@ -144,7 +144,7 @@
                     "Choices": [
                       {
                         "Next": "Meets all requirements",
-                        "Condition": "{% $count($states.input.Item.fastq_id_set) = 1 %}"
+                        "Condition": "{% $count($states.input.Item.fastq_id_set.SS) = 1 %}"
                       }
                     ],
                     "Default": "Pop fastq set id from task token"
@@ -228,7 +228,7 @@
                     "Choices": [
                       {
                         "Next": "Delete fastq id from db",
-                        "Condition": "{% $count($states.input.Item.task_token_set) = 1 %}"
+                        "Condition": "{% $count($states.input.Item.task_token_set.SS) = 1 %}"
                       }
                     ],
                     "Default": "Pop task token from fastq id"
