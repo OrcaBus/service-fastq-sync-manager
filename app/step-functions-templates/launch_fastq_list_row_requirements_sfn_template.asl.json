@@ -90,7 +90,7 @@
               "Choices": [
                 {
                   "Next": "Launch QC",
-                  "Condition": "{% /* Has Read Count */\n(\n ( ($fastqObj.readCount ?? null) != null ) and\n  $fastqObj.baseCountEst ? true : false\n) and \n/* Not already launching read count */\n$not(\"hasReadCountInformation\" in $unsatisfiedRequirements) %}",
+                  "Condition": "{% /* Has Read Count */\n(\n ( ($fastqObj.readCount ?? null) != null ) and\n ( ($fastqObj.baseCountEst ?? null ) != null ) \n) and \n/* Not already launching read count */\n$not(\"hasReadCountInformation\" in $unsatisfiedRequirements) %}",
                   "Comment": "Ensure readcount exists before getting qc stats"
                 }
               ],
@@ -197,7 +197,7 @@
               "Choices": [
                 {
                   "Next": "Launch Compression Information",
-                  "Condition": "{% /* Has Read Count */\n(\n  ($fastqObj.readCount ?? null) != null ) and\n  $fastqObj.baseCountEst ? true : false\n) and \n/* Not already launching read count */\n$not(\"hasReadCountInformation\" in $unsatisfiedRequirements) %}",
+                  "Condition": "{% /* Has Read Count */\n(\n  ($fastqObj.readCount ?? null) != null ) and\n ( ($fastqObj.baseCountEst ?? null) != null ) \n) and \n/* Not already launching read count */\n$not(\"hasReadCountInformation\" in $unsatisfiedRequirements) %}",
                   "Comment": "Has readcount info and readcount info not in requirements"
                 }
               ],
