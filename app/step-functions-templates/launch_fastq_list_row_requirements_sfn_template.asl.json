@@ -79,18 +79,25 @@
               "Type": "Choice",
               "Choices": [
                 {
-                  "Next": "If read count available first",
+                  "Next": "Read Count Available First (qc) Var",
                   "Condition": "{% \"hasQc\" in $unsatisfiedRequirements %}"
                 }
               ],
               "Default": "Pass"
             },
-            "If read count available first": {
+            "Read Count Available First (qc) Var": {
+              "Type": "Pass",
+              "Next": "Read count available first (qc)",
+              "Assign": {
+                "readCountIsAvailableQc": "{% /* Has Read Count */\n(\n ( ( $exists($fastqObj.readCount) ? $fastqObj.readCount : null ) != null ) and\n ( ( $exists($fastqObj.baseCountEst) ? $fastqObj.baseCountEst : null ) != null ) \n) and \n/* Not already launching read count */\n$not(\"hasReadCountInformation\" in $unsatisfiedRequirements) %}"
+              }
+            },
+            "Read count available first (qc)": {
               "Type": "Choice",
               "Choices": [
                 {
                   "Next": "Launch QC",
-                  "Condition": "{% /* Has Read Count */\n(\n ( ($fastqObj.readCount ?? null) != null ) and\n ( ($fastqObj.baseCountEst ?? null ) != null ) \n) and \n/* Not already launching read count */\n$not(\"hasReadCountInformation\" in $unsatisfiedRequirements) %}",
+                  "Condition": "{% $readCountIsAvailableQc %}",
                   "Comment": "Ensure readcount exists before getting qc stats"
                 }
               ],
@@ -186,18 +193,25 @@
               "Type": "Choice",
               "Choices": [
                 {
-                  "Next": "Check if readcount is available first",
+                  "Next": "Readcount available first (gzip) var",
                   "Condition": "{% \"hasFileCompressionInformation\" in $unsatisfiedRequirements %}"
                 }
               ],
               "Default": "Pass (1)"
             },
-            "Check if readcount is available first": {
+            "Readcount available first (gzip) var": {
+              "Type": "Pass",
+              "Next": "Readcount available first (gzip)",
+              "Assign": {
+                "readCountIsAvailableGzip": "{% /* Has Read Count */\n(\n ( ( $exists($fastqObj.readCount) ? $fastqObj.readCount : null ) != null ) and\n ( ( $exists($fastqObj.baseCountEst) ? $fastqObj.baseCountEst : null ) != null ) \n) and \n/* Not already launching read count */\n$not(\"hasReadCountInformation\" in $unsatisfiedRequirements) %}"
+              }
+            },
+            "Readcount available first (gzip)": {
               "Type": "Choice",
               "Choices": [
                 {
                   "Next": "Launch Compression Information",
-                  "Condition": "{% /* Has Read Count */\n(\n  ($fastqObj.readCount ?? null) != null ) and\n ( ($fastqObj.baseCountEst ?? null) != null ) \n) and \n/* Not already launching read count */\n$not(\"hasReadCountInformation\" in $unsatisfiedRequirements) %}",
+                  "Condition": "{% $readCountIsAvailableGzip %}",
                   "Comment": "Has readcount info and readcount info not in requirements"
                 }
               ],
