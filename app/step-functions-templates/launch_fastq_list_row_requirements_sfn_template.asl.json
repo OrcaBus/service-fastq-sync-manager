@@ -89,7 +89,7 @@
               "Type": "Pass",
               "Next": "Read count available first (qc)",
               "Assign": {
-                "readCountIsAvailableQc": "{% /* Has Read Count */\n(\n ( ( $exists($fastqObj.readCount) ? $fastqObj.readCount : null ) != null ) and\n ( ( $exists($fastqObj.baseCountEst) ? $fastqObj.baseCountEst : null ) != null ) \n) and \n/* Not already launching read count */\n$not(\"hasReadCountInformation\" in $unsatisfiedRequirements) %}"
+                "readCountIsAvailableQc": "{% /* Has Read Count */\n(\n $exists($fastqObj.readCount) and\n $exists($fastqObj.baseCountEst) \n) and \n/* Not already launching read count */\n$not(\"hasReadCountInformation\" in $unsatisfiedRequirements) %}"
               }
             },
             "Read count available first (qc)": {
@@ -203,7 +203,7 @@
               "Type": "Pass",
               "Next": "Readcount available first (gzip)",
               "Assign": {
-                "readCountIsAvailableGzip": "{% /* Has Read Count */\n(\n ( ( $exists($fastqObj.readCount) ? $fastqObj.readCount : null ) != null ) and\n ( ( $exists($fastqObj.baseCountEst) ? $fastqObj.baseCountEst : null ) != null ) \n) and \n/* Not already launching read count */\n$not(\"hasReadCountInformation\" in $unsatisfiedRequirements) %}"
+                "readCountIsAvailableGzip": "{% /* Has Read Count */\n(\n $exists($fastqObj.readCount) and\n $exists($fastqObj.baseCountEst)\n) and \n/* Not already launching read count */\n$not(\"hasReadCountInformation\" in $unsatisfiedRequirements) %}"
               }
             },
             "Readcount available first (gzip)": {
