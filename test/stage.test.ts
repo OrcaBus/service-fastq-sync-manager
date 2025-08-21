@@ -20,7 +20,7 @@ describe('cdk-nag-stateless-toolchain-stack', () => {
   const statelessApplicationStack = new StatelessApplicationStack(
     app,
     'StatelessApplicationStack',
-    getStatelessApplicationProps('PROD')
+    getStatelessApplicationProps()
   );
 
   Aspects.of(statelessApplicationStack).add(new AwsSolutionsChecks());

@@ -35,10 +35,6 @@ function buildLambda(scope: Construct, props: LambdaProps): LambdaObject {
   // Add in the fastq sync layer if required
   if (lambdaRequirements.needsFastqSyncLayer) {
     lambdaFunction.addLayers(props.fastqSyncLayer);
-    lambdaFunction.addEnvironment(
-      'BYOB_BUCKET_PREFIX',
-      `s3://${props.pipelineCacheBucketName}/${props.pipelineCacheKeyPrefix}`
-    );
   }
 
   // AwsSolutions-L1 - We'll migrate to PYTHON_3_13 ASAP, soz
