@@ -40,16 +40,10 @@ export const lambdaRequirementsMap: Record<LambdaNameList, LambdaRequirements> =
 export interface LambdaProps {
   lambdaName: LambdaNameList;
   fastqSyncLayer: LayerVersion;
-  pipelineCacheBucketName: string;
-  pipelineCacheKeyPrefix: string;
 }
 
 export type BuildAllLambdaProps = Omit<LambdaProps, 'lambdaName'>;
 
-export interface LambdaObject
-  extends Omit<
-    LambdaProps,
-    'fastqSyncLayer' | 'pipelineCacheBucketName' | 'pipelineCacheKeyPrefix'
-  > {
+export interface LambdaObject extends Omit<LambdaProps, 'fastqSyncLayer'> {
   lambdaFunction: PythonFunction;
 }

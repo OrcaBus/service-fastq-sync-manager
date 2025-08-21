@@ -4,11 +4,11 @@
 Bunch of useful helper functions for lambdas in the fastq sync service
 """
 
-
-from os import environ
+# Standard library imports
 from typing import Optional, List, Tuple
 import logging
 
+# Layer imports
 from orcabus_api_tools.fastq import (
     get_fastq_jobs,
     run_qc_stats,
@@ -30,8 +30,8 @@ from orcabus_api_tools.fastq_unarchiving.models import (
     Job as UnarchivingJob,
 )
 
+# Local imports
 from .globals import (
-    BYOB_BUCKET_PREFIX_ENV_VAR,
     REQUIREMENT,
     ACTIVE_STORAGE_CLASSES
 )
@@ -50,13 +50,7 @@ def has_active_readset(fastq_obj: 'Fastq') -> bool:
 
     for readset_object in readset_objects:
         # If the storage class is not in the active storage classes or
-        # the s3 uri does not start with the bucket prefix
-        # then return False
-        if (
-                (readset_object['storageClass'] not in ACTIVE_STORAGE_CLASSES)
-                or
-                (not readset_object['s3Uri'].startswith(environ[BYOB_BUCKET_PREFIX_ENV_VAR]))
-        ):
+        if readset_object['storageClass'] not in ACTIVE_STORAGE_CLASSES:
             return False
 
     return True
