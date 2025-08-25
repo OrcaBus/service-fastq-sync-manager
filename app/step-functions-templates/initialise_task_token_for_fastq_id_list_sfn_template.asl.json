@@ -42,6 +42,9 @@
           "JitterStrategy": "FULL"
         }
       ],
+      "Assign": {
+        "fastqIdListWithMissingRequirements": "{% $states.result.Payload.fastqIdListWithMissingRequirements %}"
+      },
       "Output": {
         "hasAllRequirements": "{% $states.result.Payload.hasAllRequirements %}"
       },
@@ -113,6 +116,10 @@
           "States": {
             "For each fastq id (db)": {
               "Type": "Map",
+              "Items": "{% $fastqIdListWithMissingRequirements %}",
+              "ItemSelector": {
+                "fastqIdListMapIter": "{% $states.context.Map.Item.Value %}"
+              },
               "ItemProcessor": {
                 "ProcessorConfig": {
                   "Mode": "INLINE"
@@ -196,11 +203,7 @@
                   }
                 }
               },
-              "End": true,
-              "Items": "{% $fastqIdList %}",
-              "ItemSelector": {
-                "fastqIdListMapIter": "{% $states.context.Map.Item.Value %}"
-              }
+              "End": true
             }
           }
         }
