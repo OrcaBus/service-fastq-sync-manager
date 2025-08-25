@@ -43,7 +43,21 @@ def handler(event, context):
         is_unarchiving_allowed=is_unarchiving_allowed
     )
 
+    fastq_id_list_with_missing_requirements = []
+
+    if len(unsatisfied_requirements) > 0:
+        for fastq_obj_iter in fastq_obj_list:
+            satisfied_requirements_iter, unsatisfied_requirements_iter = check_fastq_list_against_requirements_list(
+                fastq_list=[fastq_obj_iter],
+                requirements=requirements,
+                is_unarchiving_allowed=is_unarchiving_allowed
+            )
+            if len(unsatisfied_requirements_iter) > 0:
+                fastq_id_list_with_missing_requirements.append(fastq_obj_iter['id'])
+
+    # Return the results
     return {
+        "fastqIdListWithMissingRequirements": fastq_id_list_with_missing_requirements,
         "hasAllRequirements": (True if len(unsatisfied_requirements) == 0 else False),
     }
 
