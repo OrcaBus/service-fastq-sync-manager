@@ -38,6 +38,8 @@ export interface EventBridgeRuleProps {
   eventBus: IEventBus;
 }
 
+export type EventBridgeRulesProps = Omit<EventBridgeRuleProps, 'ruleName'>;
+
 export interface HeartBeatEventBridgeRuleProps extends Omit<EventBridgeRuleProps, 'eventBus'> {
   scheduleDuration?: Duration;
 }

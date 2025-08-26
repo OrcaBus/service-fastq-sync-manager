@@ -120,7 +120,7 @@
                 "Send heartbeat to task token": {
                   "Type": "Task",
                   "Arguments": {
-                    "TaskToken": "MyData"
+                    "TaskToken": "{% $taskTokenMapIter %}"
                   },
                   "Resource": "arn:aws:states:::aws-sdk:sfn:sendTaskHeartbeat",
                   "End": true,
@@ -216,10 +216,10 @@
                                       "S": "${__fastq_id_sort_key__}"
                                     }
                                   },
-                                  "UpdateExpression": "DELETE task_token_set = :removed_task_token_set",
+                                  "UpdateExpression": "DELETE task_token_set :removed_task_token_set",
                                   "ExpressionAttributeValues": {
                                     ":removed_task_token_set": {
-                                      "S": "{% $taskTokenMapIter %}"
+                                      "SS": ["{% $taskTokenMapIter %}"]
                                     }
                                   }
                                 },

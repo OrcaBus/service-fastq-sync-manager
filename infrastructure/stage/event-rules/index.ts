@@ -13,10 +13,10 @@ import {
 } from '../constants';
 import { Construct } from 'constructs';
 import {
-  EventBridgeRuleProps,
   EventBridgeRuleObject,
   eventRuleNameList,
   HeartBeatEventBridgeRuleProps,
+  EventBridgeRulesProps,
 } from './interfaces';
 
 /**
@@ -109,7 +109,7 @@ function buildHeartBeatEventBridgeRule(
  */
 export function buildAllEventRules(
   scope: Construct,
-  props: EventBridgeRuleProps
+  props: EventBridgeRulesProps
 ): EventBridgeRuleObject[] {
   const eventRulesList: EventBridgeRuleObject[] = [];
   for (const eventRule of eventRuleNameList) {
