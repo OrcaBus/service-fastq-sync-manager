@@ -11,7 +11,7 @@
       "Resource": "arn:aws:states:::aws-sdk:dynamodb:scan",
       "Next": "Has tokens",
       "Output": {
-        "taskTokensList": "{% [$states.result.Items.(.id.S)] %}"
+        "taskTokenList": "{% [$states.result.Items.(.id.S)] %}"
       }
     },
     "Has tokens": {
@@ -34,6 +34,12 @@
     },
     "For all task tokens (batched)": {
       "Type": "Map",
+      "Label": "Foralltasktokensbatched",
+      "MaxConcurrency": 1000,
+      "Items": "{% $states.input.taskTokenList %}",
+      "ItemBatcher": {
+        "MaxItemsPerBatch": 10
+      },
       "ItemProcessor": {
         "ProcessorConfig": {
           "Mode": "DISTRIBUTED",
@@ -43,6 +49,10 @@
         "States": {
           "For each task token": {
             "Type": "Map",
+            "Items": "{% $states.input.Items %}",
+            "ItemSelector": {
+              "taskTokenMapIter": "{% $states.context.Map.Item.Value %}"
+            },
             "ItemProcessor": {
               "ProcessorConfig": {
                 "Mode": "INLINE"
@@ -255,21 +265,11 @@
                 }
               }
             },
-            "End": true,
-            "Items": "{% $states.input.Items %}",
-            "ItemSelector": {
-              "taskTokenMapIter": "{% $states.context.Map.Item.Value %}"
-            }
+            "End": true
           }
         }
       },
-      "End": true,
-      "Label": "Foralltasktokensbatched",
-      "MaxConcurrency": 1000,
-      "Items": "{% $states.input.taskTokenList %}",
-      "ItemBatcher": {
-        "MaxItemsPerBatch": 10
-      }
+      "End": true
     }
   },
   "QueryLanguage": "JSONata"

@@ -64,7 +64,7 @@ function createStateMachineDefinitionSubstitutions(props: SfnProps): {
   return definitionSubstitutions;
 }
 
-function wireUpStateMachinePermissions(props: SfnPropsWithObject): void {
+function wireUpStateMachinePermissions(scope: Construct, props: SfnPropsWithObject): void {
   /* Wire up lambda permissions */
   const sfnRequirements = stepFunctionsRequirementsMap[props.stateMachineName];
 
@@ -118,6 +118,49 @@ function wireUpStateMachinePermissions(props: SfnPropsWithObject): void {
       })
     );
   }
+
+  // Grant distributed map function permissions
+  if (sfnRequirements.needsDistributedMapPermissions) {
+    // SFN requires permissions to execute itself
+    // Because this steps execution uses a distributed map in its step function, we
+    // have to wire up some extra permissions
+    // Grant the state machine's role to execute itself
+    // However we cannot just grant permission to the role as this will result in a circular dependency
+    // between the state machine and the role
+    // Instead we use the workaround here - https://github.com/aws/aws-cdk/issues/28820#issuecomment-1936010520
+    const distributedMapPolicy = new iam.Policy(
+      scope,
+      `${props.stateMachineName}-distributed-map-policy`,
+      {
+        document: new iam.PolicyDocument({
+          statements: [
+            new iam.PolicyStatement({
+              resources: [props.stateMachineObj.stateMachineArn],
+              actions: ['states:StartExecution'],
+            }),
+            new iam.PolicyStatement({
+              resources: [
+                `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:execution:${props.stateMachineObj.stateMachineName}/*:*`,
+              ],
+              actions: ['states:RedriveExecution'],
+            }),
+          ],
+        }),
+      }
+    );
+    // Add the policy to the state machine's role
+    props.stateMachineObj.role.attachInlinePolicy(distributedMapPolicy);
+    // Oh and well also need to put in NagSuppressions because we just used a LOT of asterisks
+    NagSuppressions.addResourceSuppressions(
+      [distributedMapPolicy, props.stateMachineObj],
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'We need to allow the state machine to execute itself and redrive executions',
+        },
+      ]
+    );
+  }
 }
 
 function buildStepFunction(scope: Construct, props: SfnProps): SfnObject {
@@ -133,7 +176,7 @@ function buildStepFunction(scope: Construct, props: SfnProps): SfnObject {
   });
 
   /* Grant the state machine permissions */
-  wireUpStateMachinePermissions({
+  wireUpStateMachinePermissions(scope, {
     stateMachineObj: stateMachine,
     ...props,
   });

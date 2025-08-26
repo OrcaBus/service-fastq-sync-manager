@@ -36,6 +36,7 @@ export interface StepFunctionsRequirements {
   needsSfnExecutionAccess?: boolean;
   needsSendTaskExecutionAccess?: boolean;
   needsHeartBeatRuleSwitchAccess?: boolean;
+  needsDistributedMapPermissions?: boolean;
 }
 
 export const stepFunctionsRequirementsMap: Record<StepFunctionsName, StepFunctionsRequirements> = {
@@ -63,6 +64,7 @@ export const stepFunctionsRequirementsMap: Record<StepFunctionsName, StepFunctio
     needsDbAccess: true,
     needsSendTaskExecutionAccess: true,
     needsHeartBeatRuleSwitchAccess: true,
+    needsDistributedMapPermissions: true,
   },
 };
 
