@@ -206,6 +206,19 @@
               "End": true
             }
           }
+        },
+        {
+          "StartAt": "Enable External Heartbeat monitoring",
+          "States": {
+            "Enable External Heartbeat monitoring": {
+              "Type": "Task",
+              "Arguments": {
+                "Name": "${__heartbeat_scheduler_rule_name__}"
+              },
+              "Resource": "arn:aws:states:::aws-sdk:eventbridge:enableRule",
+              "End": true
+            }
+          }
         }
       ]
     },

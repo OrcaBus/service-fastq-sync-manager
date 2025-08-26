@@ -62,7 +62,7 @@ export function buildAllEventBridgeTargets(props: EventBridgeTargetsProps) {
           stateMachineObj: props.stepFunctionObjects.find(
             (eventBridgeObject) =>
               eventBridgeObject.stateMachineName === 'initialiseTaskTokenForFastqSetIdList'
-          )?.stateMachineObject,
+          )?.stateMachineObj,
         });
         break;
       }
@@ -76,7 +76,7 @@ export function buildAllEventBridgeTargets(props: EventBridgeTargetsProps) {
           stateMachineObj: props.stepFunctionObjects.find(
             (eventBridgeObject) =>
               eventBridgeObject.stateMachineName === 'initialiseTaskTokenForFastqIdList'
-          )?.stateMachineObject,
+          )?.stateMachineObj,
         });
         break;
       }
@@ -89,7 +89,7 @@ export function buildAllEventBridgeTargets(props: EventBridgeTargetsProps) {
           stateMachineObj: props.stepFunctionObjects.find(
             (eventBridgeObject) =>
               eventBridgeObject.stateMachineName === 'initialiseTaskTokenForFastqSetIdList'
-          )?.stateMachineObject,
+          )?.stateMachineObj,
         });
         break;
       }
@@ -101,7 +101,7 @@ export function buildAllEventBridgeTargets(props: EventBridgeTargetsProps) {
           )?.ruleObject,
           stateMachineObj: props.stepFunctionObjects.find(
             (eventBridgeObject) => eventBridgeObject.stateMachineName === 'fastqIdUpdated'
-          )?.stateMachineObject,
+          )?.stateMachineObj,
         });
         break;
       }
@@ -113,7 +113,19 @@ export function buildAllEventBridgeTargets(props: EventBridgeTargetsProps) {
           )?.ruleObject,
           stateMachineObj: props.stepFunctionObjects.find(
             (eventBridgeObject) => eventBridgeObject.stateMachineName === 'fastqIdUpdated'
-          )?.stateMachineObject,
+          )?.stateMachineObj,
+        });
+        break;
+      }
+      // Heartbeat scheduler
+      case 'heartBeatMonitorSchedulerToExternalHeartBeatMonitorSfn': {
+        buildSfnEventBridgeTarget(<AddSfnAsEventBridgeTargetProps>{
+          eventBridgeRuleObj: props.eventBridgeRuleObjects.find(
+            (eventBridgeObject) => eventBridgeObject.ruleName === 'heartbeatFastqSyncJobsScheduler'
+          )?.ruleObject,
+          stateMachineObj: props.stepFunctionObjects.find(
+            (sfnObject) => sfnObject.stateMachineName === 'externalHeartbeatMonitor'
+          )?.stateMachineObj,
         });
         break;
       }

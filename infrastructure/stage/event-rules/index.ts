@@ -1,6 +1,7 @@
-import { EventPattern } from 'aws-cdk-lib/aws-events';
+import { EventPattern, Rule } from 'aws-cdk-lib/aws-events';
 import * as events from 'aws-cdk-lib/aws-events';
 import {
+  DEFAULT_HEART_BEAT_INTERVAL,
   FASTQ_STATE_CHANGE_EVENT_DETAIL_TYPE,
   FASTQ_SYNC_EVENT_DETAIL_TYPE,
   FASTQ_SYNC_LEGACY_EVENT_DETAIL_TYPE,
@@ -11,7 +12,12 @@ import {
   FASTQ_UNARCHIVING_MANAGER_EVENT_SOURCE,
 } from '../constants';
 import { Construct } from 'constructs';
-import { BuildEventProps, EventBridgeRuleObject, eventRuleNameList } from './interfaces';
+import {
+  EventBridgeRuleProps,
+  EventBridgeRuleObject,
+  eventRuleNameList,
+  HeartBeatEventBridgeRuleProps,
+} from './interfaces';
 
 /**
  * Legacy event
@@ -87,13 +93,23 @@ function createFastqUnarchivingJobStateChangeEventPattern(): EventPattern {
   };
 }
 
+/* Heartbeat scheduler */
+function buildHeartBeatEventBridgeRule(
+  scope: Construct,
+  props: HeartBeatEventBridgeRuleProps
+): Rule {
+  return new events.Rule(scope, props.ruleName, {
+    ruleName: props.ruleName,
+    schedule: events.Schedule.rate(props.scheduleDuration ?? DEFAULT_HEART_BEAT_INTERVAL),
+  });
+}
+
 /**
  * Create event rules
  */
-
 export function buildAllEventRules(
   scope: Construct,
-  props: BuildEventProps
+  props: EventBridgeRuleProps
 ): EventBridgeRuleObject[] {
   const eventRulesList: EventBridgeRuleObject[] = [];
   for (const eventRule of eventRuleNameList) {
@@ -156,6 +172,17 @@ export function buildAllEventRules(
             ruleName: eventRule,
             eventBus: props.eventBus,
             eventPattern: createFastqUnarchivingJobStateChangeEventPattern(),
+          }),
+        });
+        break;
+      }
+
+      // Heartbeat events
+      case 'heartbeatFastqSyncJobsScheduler': {
+        eventRulesList.push({
+          ruleName: eventRule,
+          ruleObject: buildHeartBeatEventBridgeRule(scope, {
+            ruleName: eventRule,
           }),
         });
         break;

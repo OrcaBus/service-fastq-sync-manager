@@ -23,7 +23,7 @@ import {
 } from './interfaces';
 import { camelCaseToSnakeCase } from '../utils';
 import { NagSuppressions } from 'cdk-nag';
-import { SFN_PREFIX, STEP_FUNCTIONS_ROOT } from '../constants';
+import { HEART_BEAT_SCHEDULER_RULE_NAME, SFN_PREFIX, STEP_FUNCTIONS_ROOT } from '../constants';
 import { StateMachine } from 'aws-cdk-lib/aws-stepfunctions';
 
 /** Step Function stuff */
@@ -57,6 +57,10 @@ function createStateMachineDefinitionSubstitutions(props: SfnProps): {
       `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:stateMachine:${SFN_PREFIX}-${initialiseTaskTokenForFastqIdListSfnName}`;
   }
 
+  if (sfnRequirements.needsHeartBeatRuleSwitchAccess) {
+    definitionSubstitutions['__heartbeat_scheduler_rule_name__'] = HEART_BEAT_SCHEDULER_RULE_NAME;
+  }
+
   return definitionSubstitutions;
 }
 
@@ -71,17 +75,18 @@ function wireUpStateMachinePermissions(props: SfnPropsWithObject): void {
 
   /* Allow the state machine to invoke the lambda function */
   for (const lambdaObject of lambdaFunctions) {
-    lambdaObject.lambdaFunction.currentVersion.grantInvoke(props.stateMachineObject);
+    lambdaObject.lambdaFunction.currentVersion.grantInvoke(props.stateMachineObj);
   }
 
   /* Permissions */
   /* Grant the state machine permissions to read from the DynamoDB table */
   if (sfnRequirements.needsDbAccess) {
-    props.tableObj.grantReadWriteData(props.stateMachineObject);
+    props.tableObj.grantReadWriteData(props.stateMachineObj);
   }
 
+  // Grant permissions to send task success/failure/heartbeat
   if (sfnRequirements.needsSendTaskExecutionAccess) {
-    props.stateMachineObject.addToRolePolicy(
+    props.stateMachineObj.addToRolePolicy(
       new iam.PolicyStatement({
         resources: [`arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:stateMachine:*`],
         actions: ['states:SendTaskSuccess', 'states:SendTaskFailure', 'states:SendTaskHeartbeat'],
@@ -91,7 +96,7 @@ function wireUpStateMachinePermissions(props: SfnPropsWithObject): void {
     // Will need cdk nag suppressions for this
     // Because we are using a wildcard for an IAM Resource policy
     NagSuppressions.addResourceSuppressions(
-      props.stateMachineObject,
+      props.stateMachineObj,
       [
         {
           id: 'AwsSolutions-IAM5',
@@ -99,6 +104,18 @@ function wireUpStateMachinePermissions(props: SfnPropsWithObject): void {
         },
       ],
       true
+    );
+  }
+
+  // Grant permissions to enable/disable the heartbeat scheduler rule
+  if (sfnRequirements.needsHeartBeatRuleSwitchAccess) {
+    props.stateMachineObj.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ['events:EnableRule', 'events:DisableRule'],
+        resources: [
+          `arn:aws:events:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:rule/${HEART_BEAT_SCHEDULER_RULE_NAME}`,
+        ],
+      })
     );
   }
 }
@@ -117,7 +134,7 @@ function buildStepFunction(scope: Construct, props: SfnProps): SfnObject {
 
   /* Grant the state machine permissions */
   wireUpStateMachinePermissions({
-    stateMachineObject: stateMachine,
+    stateMachineObj: stateMachine,
     ...props,
   });
 
@@ -142,7 +159,7 @@ function buildStepFunction(scope: Construct, props: SfnProps): SfnObject {
   /* Return as a state machine object property */
   return {
     ...props,
-    stateMachineObject: stateMachine,
+    stateMachineObj: stateMachine,
   };
 }
 
@@ -165,7 +182,7 @@ export function buildAllStepFunctions(scope: Construct, props: SfnsProps): SfnOb
     /* Wire up lambda permissions */
     const sfnRequirements = stepFunctionsRequirementsMap[sfnName];
     const sfnObject = <StateMachine>(
-      sfnObjects.find((sfnObject) => sfnObject.stateMachineName === sfnName)?.stateMachineObject
+      sfnObjects.find((sfnObject) => sfnObject.stateMachineName === sfnName)?.stateMachineObj
     );
 
     /* Sfn Requirements */

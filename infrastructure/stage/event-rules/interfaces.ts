@@ -3,6 +3,8 @@ List of interfaces used for event rules
  */
 
 import { IEventBus, Rule } from 'aws-cdk-lib/aws-events';
+import { Duration } from 'aws-cdk-lib';
+import { HEART_BEAT_SCHEDULER_RULE_NAME } from '../constants';
 
 export type EventRuleName =
   // Legacy rule
@@ -13,7 +15,9 @@ export type EventRuleName =
   // Fastq List row updated
   | 'fastqStateChange'
   // Fastq Unarchiving updated
-  | 'fastqUnarchivingStateChange';
+  | 'fastqUnarchivingStateChange'
+  // Internal Heartbeat
+  | typeof HEART_BEAT_SCHEDULER_RULE_NAME;
 
 export const eventRuleNameList: EventRuleName[] = [
   // Legacy rule
@@ -25,10 +29,17 @@ export const eventRuleNameList: EventRuleName[] = [
   'fastqStateChange',
   // Fastq Unarchiving updated
   'fastqUnarchivingStateChange',
+  // Internal Heartbeat
+  HEART_BEAT_SCHEDULER_RULE_NAME,
 ];
 
-export interface BuildEventProps {
+export interface EventBridgeRuleProps {
+  ruleName: EventRuleName;
   eventBus: IEventBus;
+}
+
+export interface HeartBeatEventBridgeRuleProps extends Omit<EventBridgeRuleProps, 'eventBus'> {
+  scheduleDuration?: Duration;
 }
 
 export interface EventBridgeRuleObject {

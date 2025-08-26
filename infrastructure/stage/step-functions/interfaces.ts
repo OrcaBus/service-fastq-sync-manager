@@ -10,7 +10,9 @@ export type StepFunctionsName =
   // Launch jobs as required
   | 'launchFastqListRowRequirements'
   // Listen to fastq related events to release task tokens
-  | 'fastqIdUpdated';
+  | 'fastqIdUpdated'
+  // External heartbeat monitoring
+  | 'externalHeartbeatMonitor';
 
 export const stepFunctionsNames: StepFunctionsName[] = [
   // Initialisation
@@ -20,6 +22,8 @@ export const stepFunctionsNames: StepFunctionsName[] = [
   'launchFastqListRowRequirements',
   // Listen to fastq related events to release task tokens
   'fastqIdUpdated',
+  // External heartbeat monitoring
+  'externalHeartbeatMonitor',
 ];
 
 export const launchFastqListRowRequirementsSfnName: StepFunctionsName =
@@ -31,6 +35,7 @@ export interface StepFunctionsRequirements {
   needsDbAccess?: boolean;
   needsSfnExecutionAccess?: boolean;
   needsSendTaskExecutionAccess?: boolean;
+  needsHeartBeatRuleSwitchAccess?: boolean;
 }
 
 export const stepFunctionsRequirementsMap: Record<StepFunctionsName, StepFunctionsRequirements> = {
@@ -39,6 +44,7 @@ export const stepFunctionsRequirementsMap: Record<StepFunctionsName, StepFunctio
     needsDbAccess: true,
     needsSfnExecutionAccess: true,
     needsSendTaskExecutionAccess: true,
+    needsHeartBeatRuleSwitchAccess: true,
   },
   initialiseTaskTokenForFastqSetIdList: {
     needsSfnExecutionAccess: true,
@@ -52,6 +58,12 @@ export const stepFunctionsRequirementsMap: Record<StepFunctionsName, StepFunctio
     needsSfnExecutionAccess: true,
     needsSendTaskExecutionAccess: true,
   },
+  // External heartbeat monitoring
+  externalHeartbeatMonitor: {
+    needsDbAccess: true,
+    needsSendTaskExecutionAccess: true,
+    needsHeartBeatRuleSwitchAccess: true,
+  },
 };
 
 // Map the lambda functions to their step function names
@@ -60,12 +72,8 @@ export const stepFunctionLambdaMap: Record<StepFunctionsName, LambdaNameList[]> 
   initialiseTaskTokenForFastqSetIdList: ['getFastqIdListFromFastqSetIdList'],
   launchFastqListRowRequirements: ['getFastqAndRemainingRequirements', 'launchRequirementJob'],
   fastqIdUpdated: ['checkFastqIdListAgainstRequirements'],
+  externalHeartbeatMonitor: ['checkRunningJobsForFastqIdList'],
 };
-
-export interface StepFunctionRequirements {
-  needsS3Access?: boolean;
-  needsSfnExecutionAccessPermissions?: boolean;
-}
 
 export interface SfnProps {
   // Name of the state machine
@@ -79,12 +87,12 @@ export interface SfnProps {
 }
 
 export interface SfnPropsWithObject extends SfnProps {
-  stateMachineObject: StateMachine;
+  stateMachineObj: StateMachine;
 }
 
 export type SfnsProps = Omit<SfnProps, 'stateMachineName'>;
 
 export interface SfnObject {
   stateMachineName: StepFunctionsName;
-  stateMachineObject: StateMachine;
+  stateMachineObj: StateMachine;
 }
