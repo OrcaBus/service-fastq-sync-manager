@@ -16,7 +16,9 @@ export type EventTargets =
   // Fastq ID Updated
   | 'fastqListRowStateChangeToFastqIdUpdatedSfn'
   // Fastq Unarchiving updated
-  | 'fastqUnarchivingJobStateChangeToFastqIdUpdatedSfn';
+  | 'fastqUnarchivingJobStateChangeToFastqIdUpdatedSfn'
+  // Scheduler
+  | 'heartBeatMonitorSchedulerToExternalHeartBeatMonitorSfn';
 
 export const eventTargetsList: EventTargets[] = [
   // Legacy

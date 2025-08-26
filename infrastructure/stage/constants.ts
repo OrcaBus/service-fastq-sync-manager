@@ -1,4 +1,5 @@
 import * as path from 'path';
+import { Duration } from 'aws-cdk-lib';
 
 // Dir constants
 export const APP_ROOT = path.join(__dirname, '../../', 'app');
@@ -17,8 +18,13 @@ export const FASTQ_SYNC_EVENT_DETAIL_TYPE = 'FastqSync';
 export const FASTQ_STATE_CHANGE_EVENT_DETAIL_TYPE = 'FastqStateChange';
 export const FASTQ_MANAGER_EVENT_SOURCE = 'orcabus.fastqmanager';
 
+// Events for unarchiving jobs
 export const FASTQ_UNARCHIVING_JOB_EVENT_DETAIL_TYPE = 'FastqUnarchivingJobStateChange';
 export const FASTQ_UNARCHIVING_MANAGER_EVENT_SOURCE = 'orcabus.fastqunarchivingmanager';
+
+// Event rule constants
+export const HEART_BEAT_SCHEDULER_RULE_NAME = 'heartbeatFastqSyncJobsScheduler';
+export const DEFAULT_HEART_BEAT_INTERVAL = Duration.seconds(300); // 5 minutes in seconds
 
 // Step functions constants
 export const SFN_PREFIX = 'fastq-sync';

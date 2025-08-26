@@ -29,5 +29,8 @@ export function buildTaskTokenTable(scope: Construct, props: TaskTokenTableProps
     pointInTimeRecoverySpecification: {
       pointInTimeRecoveryEnabled: true,
     },
+    /* Time to live attribute */
+    // Used for the task token expiration
+    timeToLiveAttribute: 'expiresAt',
   });
 }

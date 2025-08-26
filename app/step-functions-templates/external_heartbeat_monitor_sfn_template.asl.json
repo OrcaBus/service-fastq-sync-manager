@@ -1,0 +1,276 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Get all task tokens",
+  "States": {
+    "Get all task tokens": {
+      "Type": "Task",
+      "Arguments": {
+        "TableName": "${__dynamodb_table_name__}",
+        "FilterExpression": "{% $string(\n  {\n    'id_type': {'S':'${__task_token_sort_key__}'}\n  }\n) %}"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:dynamodb:scan",
+      "Next": "Has tokens",
+      "Output": {
+        "taskTokenList": "{% [$states.result.Items.(.id.S)] %}"
+      }
+    },
+    "Has tokens": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "For all task tokens (batched)",
+          "Condition": "{% $count($states.input.taskTokenList) > 0 %}"
+        }
+      ],
+      "Default": "Turn off scheduler"
+    },
+    "Turn off scheduler": {
+      "Type": "Task",
+      "Arguments": {
+        "Name": "${__heartbeat_scheduler_rule_name__}"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:eventbridge:disableRule",
+      "End": true
+    },
+    "For all task tokens (batched)": {
+      "Type": "Map",
+      "Label": "Foralltasktokensbatched",
+      "MaxConcurrency": 1000,
+      "Items": "{% $states.input.taskTokenList %}",
+      "ItemBatcher": {
+        "MaxItemsPerBatch": 10
+      },
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "DISTRIBUTED",
+          "ExecutionType": "STANDARD"
+        },
+        "StartAt": "For each task token",
+        "States": {
+          "For each task token": {
+            "Type": "Map",
+            "Items": "{% $states.input.Items %}",
+            "ItemSelector": {
+              "taskTokenMapIter": "{% $states.context.Map.Item.Value %}"
+            },
+            "ItemProcessor": {
+              "ProcessorConfig": {
+                "Mode": "INLINE"
+              },
+              "StartAt": "Set map vars",
+              "States": {
+                "Set map vars": {
+                  "Type": "Pass",
+                  "Next": "Get task tokens and fastq ids",
+                  "Assign": {
+                    "taskTokenMapIter": "{% $states.input.taskTokenMapIter %}"
+                  }
+                },
+                "Get task tokens and fastq ids": {
+                  "Type": "Task",
+                  "Resource": "arn:aws:states:::dynamodb:getItem",
+                  "Arguments": {
+                    "TableName": "${__dynamodb_table_name__}",
+                    "Key": {
+                      "id": {
+                        "S": "{% $taskTokenMapIter %}"
+                      },
+                      "id_type": {
+                        "S": "${__task_token_sort_key__}"
+                      }
+                    }
+                  },
+                  "Next": "Check jobs running for fastq id list",
+                  "Assign": {
+                    "fastqIdListMapIter": "{% $states.result.Item.fastq_id_set.SS %}"
+                  }
+                },
+                "Check jobs running for fastq id list": {
+                  "Type": "Task",
+                  "Resource": "arn:aws:states:::lambda:invoke",
+                  "Output": {
+                    "jobsRunning": "{% $states.result.Payload.jobsRunning %}"
+                  },
+                  "Arguments": {
+                    "FunctionName": "${__check_running_jobs_for_fastq_id_list_lambda_function_arn__}",
+                    "Payload": {
+                      "fastqIdList": "{% $fastqIdListMapIter %}"
+                    }
+                  },
+                  "Retry": [
+                    {
+                      "ErrorEquals": [
+                        "Lambda.ServiceException",
+                        "Lambda.AWSLambdaException",
+                        "Lambda.SdkClientException",
+                        "Lambda.TooManyRequestsException"
+                      ],
+                      "IntervalSeconds": 1,
+                      "MaxAttempts": 3,
+                      "BackoffRate": 2,
+                      "JitterStrategy": "FULL"
+                    }
+                  ],
+                  "Next": "Has jobs running"
+                },
+                "Has jobs running": {
+                  "Type": "Choice",
+                  "Choices": [
+                    {
+                      "Condition": "{% $states.input.jobsRunning ? true :  false %}",
+                      "Next": "Send heartbeat to task token"
+                    }
+                  ],
+                  "Default": "No jobs running, task may timeout"
+                },
+                "No jobs running, task may timeout": {
+                  "Type": "Pass",
+                  "End": true
+                },
+                "Send heartbeat to task token": {
+                  "Type": "Task",
+                  "Arguments": {
+                    "TaskToken": "{% $taskTokenMapIter %}"
+                  },
+                  "Resource": "arn:aws:states:::aws-sdk:sfn:sendTaskHeartbeat",
+                  "End": true,
+                  "Catch": [
+                    {
+                      "ErrorEquals": ["Sfn.TaskTimedOutException"],
+                      "Next": "Delete objects"
+                    }
+                  ]
+                },
+                "Delete objects": {
+                  "Type": "Parallel",
+                  "End": true,
+                  "Branches": [
+                    {
+                      "StartAt": "Delete task token",
+                      "States": {
+                        "Delete task token": {
+                          "Type": "Task",
+                          "Resource": "arn:aws:states:::dynamodb:deleteItem",
+                          "Arguments": {
+                            "TableName": "${__dynamodb_table_name__}",
+                            "Key": {
+                              "id": {
+                                "S": "{% $taskTokenMapIter %}"
+                              },
+                              "id_type": {
+                                "S": "${__task_token_sort_key__}"
+                              }
+                            }
+                          },
+                          "End": true
+                        }
+                      }
+                    },
+                    {
+                      "StartAt": "For fastq id in the fastq id list",
+                      "States": {
+                        "For fastq id in the fastq id list": {
+                          "Type": "Map",
+                          "ItemProcessor": {
+                            "ProcessorConfig": {
+                              "Mode": "INLINE"
+                            },
+                            "StartAt": "Set fastq id map vars",
+                            "States": {
+                              "Set fastq id map vars": {
+                                "Type": "Pass",
+                                "Next": "Get fastq id",
+                                "Assign": {
+                                  "fastqIdMapIter": "{% $states.input.fastqIdMapIter %}"
+                                }
+                              },
+                              "Get fastq id": {
+                                "Type": "Task",
+                                "Resource": "arn:aws:states:::dynamodb:getItem",
+                                "Arguments": {
+                                  "TableName": "${__dynamodb_table_name__}",
+                                  "Key": {
+                                    "id": {
+                                      "S": "{% $fastqIdMapIter %}"
+                                    },
+                                    "id_type": {
+                                      "S": "${__fastq_id_sort_key__}"
+                                    }
+                                  }
+                                },
+                                "Next": "Has multiple task tokens",
+                                "Output": {
+                                  "taskTokensInFastqIdList": "{% [$states.result.Item.task_token_set.SS] %}"
+                                }
+                              },
+                              "Has multiple task tokens": {
+                                "Type": "Choice",
+                                "Choices": [
+                                  {
+                                    "Next": "Delete task token from fastq id list",
+                                    "Condition": "{% $count($states.input.taskTokensInFastqIdList) > 1 %}"
+                                  }
+                                ],
+                                "Default": "Delete fastq id object"
+                              },
+                              "Delete task token from fastq id list": {
+                                "Type": "Task",
+                                "Resource": "arn:aws:states:::dynamodb:updateItem",
+                                "Arguments": {
+                                  "TableName": "${__dynamodb_table_name__}",
+                                  "Key": {
+                                    "id": {
+                                      "S": "{% $fastqIdMapIter %}"
+                                    },
+                                    "id_type": {
+                                      "S": "${__fastq_id_sort_key__}"
+                                    }
+                                  },
+                                  "UpdateExpression": "DELETE task_token_set :removed_task_token_set",
+                                  "ExpressionAttributeValues": {
+                                    ":removed_task_token_set": {
+                                      "SS": ["{% $taskTokenMapIter %}"]
+                                    }
+                                  }
+                                },
+                                "End": true
+                              },
+                              "Delete fastq id object": {
+                                "Type": "Task",
+                                "Resource": "arn:aws:states:::dynamodb:deleteItem",
+                                "Arguments": {
+                                  "TableName": "${__dynamodb_table_name__}",
+                                  "Key": {
+                                    "id": {
+                                      "S": "{% $fastqIdMapIter %}"
+                                    },
+                                    "id_type": {
+                                      "S": "${__fastq_id_sort_key__}"
+                                    }
+                                  }
+                                },
+                                "End": true
+                              }
+                            }
+                          },
+                          "End": true,
+                          "Items": "{% $fastqIdListMapIter %}",
+                          "ItemSelector": {
+                            "fastqIdMapIter": "{% $states.context.Map.Item.Value %}"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "End": true
+          }
+        }
+      },
+      "End": true
+    }
+  },
+  "QueryLanguage": "JSONata"
+}
