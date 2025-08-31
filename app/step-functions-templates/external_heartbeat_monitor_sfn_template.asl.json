@@ -6,12 +6,12 @@
       "Type": "Task",
       "Arguments": {
         "TableName": "${__dynamodb_table_name__}",
-        "FilterExpression": "{% $string(\n  {\n    'id_type': {'S':'${__task_token_sort_key__}'}\n  }\n) %}"
+        "FilterExpression": "{% $string(\n  {\n    'id_type': {'S': '${__task_token_sort_key__}'}\n  }\n) %}"
       },
       "Resource": "arn:aws:states:::aws-sdk:dynamodb:scan",
       "Next": "Has tokens",
       "Output": {
-        "taskTokenList": "{% [$states.result.Items.(.id.S)] %}"
+        "taskTokenList": "{% [$states.result.Items.(id.S)] %}"
       }
     },
     "Has tokens": {
