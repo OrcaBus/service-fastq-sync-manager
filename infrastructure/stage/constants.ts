@@ -24,7 +24,7 @@ export const FASTQ_UNARCHIVING_MANAGER_EVENT_SOURCE = 'orcabus.fastqunarchiving'
 
 // Event rule constants
 export const HEART_BEAT_SCHEDULER_RULE_NAME = 'heartbeatFastqSyncJobsScheduler';
-export const DEFAULT_HEART_BEAT_INTERVAL = Duration.seconds(300); // 5 minutes in seconds
+export const DEFAULT_HEART_BEAT_INTERVAL = Duration.seconds(900); // 15 minutes in seconds
 
 // Step functions constants
 export const SFN_PREFIX = 'fastq-sync';
