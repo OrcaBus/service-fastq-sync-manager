@@ -20,7 +20,7 @@ export const FASTQ_MANAGER_EVENT_SOURCE = 'orcabus.fastqmanager';
 
 // Events for unarchiving jobs
 export const FASTQ_UNARCHIVING_JOB_EVENT_DETAIL_TYPE = 'FastqUnarchivingJobStateChange';
-export const FASTQ_UNARCHIVING_MANAGER_EVENT_SOURCE = 'orcabus.fastqunarchivingmanager';
+export const FASTQ_UNARCHIVING_MANAGER_EVENT_SOURCE = 'orcabus.fastqunarchiving';
 
 // Event rule constants
 export const HEART_BEAT_SCHEDULER_RULE_NAME = 'heartbeatFastqSyncJobsScheduler';
