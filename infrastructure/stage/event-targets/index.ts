@@ -33,11 +33,21 @@ function buildLegacySfnEventBridgeTarget(props: AddSfnAsEventBridgeTargetProps):
   );
 }
 
-function buildFastqIdUpdatedTarget(props: AddSfnAsEventBridgeTargetProps): void {
+function buildFastqIdUpdatedTargetFastqStateChange(props: AddSfnAsEventBridgeTargetProps): void {
   props.eventBridgeRuleObj.addTarget(
     new eventsTargets.SfnStateMachine(props.stateMachineObj, {
       input: events.RuleTargetInput.fromObject({
-        fastqId: EventField.fromPath('$.detail.id'),
+        fastqIdList: [EventField.fromPath('$.detail.id')],
+      }),
+    })
+  );
+}
+
+function buildFastqIdUpdatedTargetFastqUnarchiving(props: AddSfnAsEventBridgeTargetProps): void {
+  props.eventBridgeRuleObj.addTarget(
+    new eventsTargets.SfnStateMachine(props.stateMachineObj, {
+      input: events.RuleTargetInput.fromObject({
+        fastqIdList: EventField.fromPath('$.detail.fastqIds'),
       }),
     })
   );
@@ -95,7 +105,7 @@ export function buildAllEventBridgeTargets(props: EventBridgeTargetsProps) {
       }
       // fastqListRowStateChangeToFastqIdUpdatedSfn
       case 'fastqListRowStateChangeToFastqIdUpdatedSfn': {
-        buildFastqIdUpdatedTarget(<AddSfnAsEventBridgeTargetProps>{
+        buildFastqIdUpdatedTargetFastqStateChange(<AddSfnAsEventBridgeTargetProps>{
           eventBridgeRuleObj: props.eventBridgeRuleObjects.find(
             (eventBridgeObject) => eventBridgeObject.ruleName === 'fastqStateChange'
           )?.ruleObject,
@@ -107,7 +117,7 @@ export function buildAllEventBridgeTargets(props: EventBridgeTargetsProps) {
       }
       // fastqUnarchivingJobStateChangeToFastqIdUpdatedSfn
       case 'fastqUnarchivingJobStateChangeToFastqIdUpdatedSfn': {
-        buildSfnEventBridgeTarget(<AddSfnAsEventBridgeTargetProps>{
+        buildFastqIdUpdatedTargetFastqUnarchiving(<AddSfnAsEventBridgeTargetProps>{
           eventBridgeRuleObj: props.eventBridgeRuleObjects.find(
             (eventBridgeObject) => eventBridgeObject.ruleName === 'fastqUnarchivingStateChange'
           )?.ruleObject,
