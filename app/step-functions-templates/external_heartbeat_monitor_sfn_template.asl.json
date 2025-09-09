@@ -59,7 +59,7 @@
     "For all task tokens (batched)": {
       "Type": "Map",
       "Label": "Foralltasktokensbatched",
-      "MaxConcurrency": 1000,
+      "MaxConcurrency": 5,
       "Items": "{% $states.input.taskTokenList %}",
       "ItemBatcher": {
         "MaxItemsPerBatch": 10
