@@ -84,7 +84,7 @@
                   },
                   "Next": "Check task token requirements against fastq id",
                   "Assign": {
-                    "requirementsSetMapIter": "{% $states.result.Item.requirements_set.SS %}"
+                    "requirementsSetMapIter": "{% $states.result.Item.requirements_set ? $states.result.Item.requirements_set.SS : [] %}"
                   }
                 },
                 "Check task token requirements against fastq id": {
