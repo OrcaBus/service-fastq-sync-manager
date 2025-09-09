@@ -30,6 +30,8 @@ export const eventTargetsList: EventTargets[] = [
   'fastqListRowStateChangeToFastqIdUpdatedSfn',
   // Fastq Unarchiving updated
   'fastqUnarchivingJobStateChangeToFastqIdUpdatedSfn',
+  // Scheduler
+  'heartBeatMonitorSchedulerToExternalHeartBeatMonitorSfn',
 ];
 
 export interface AddSfnAsEventBridgeTargetProps {
