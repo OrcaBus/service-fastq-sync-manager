@@ -6,7 +6,15 @@
       "Type": "Task",
       "Arguments": {
         "TableName": "${__dynamodb_table_name__}",
-        "FilterExpression": "{% $string(\n  {\n    'id_type': {'S': '${__task_token_sort_key__}'}\n  }\n) %}"
+        "FilterExpression": "#name = :value",
+        "ExpressionAttributeNames": {
+          "#name": "id_type"
+        },
+        "ExpressionAttributeValues": {
+          ":value": {
+            "S": "${__task_token_sort_key__}"
+          }
+        }
       },
       "Resource": "arn:aws:states:::aws-sdk:dynamodb:scan",
       "Next": "Has tokens",
@@ -82,7 +90,7 @@
                   },
                   "Next": "Check jobs running for fastq id list",
                   "Assign": {
-                    "fastqIdListMapIter": "{% $states.result.Item.fastq_id_set.SS %}"
+                    "fastqIdListMapIter": "{% $states.result.Item.fastq_id_set.SS ? $states.result.Item.fastq_id_set.SS : [] %}"
                   }
                 },
                 "Check jobs running for fastq id list": {
@@ -117,8 +125,9 @@
                   "Type": "Choice",
                   "Choices": [
                     {
-                      "Condition": "{% $states.input.jobsRunning ? true :  false %}",
-                      "Next": "Send heartbeat to task token"
+                      "Next": "Send heartbeat to task token",
+                      "Condition": "{% (\n  ( $states.input.jobsRunning ? true :  false ) or \n  ( $round($random() * 100 ) = 50 )\n) %}",
+                      "Comment": "If jobs running or (once every few hours just to clear out dud tokens)"
                     }
                   ],
                   "Default": "No jobs running, task may timeout"

@@ -47,6 +47,7 @@ function createStateMachineDefinitionSubstitutions(props: SfnProps): {
 
   /* Sfn Requirements */
   if (sfnRequirements.needsDbAccess) {
+    definitionSubstitutions['__task_token_sort_key__'] = 'TASK_TOKEN';
     definitionSubstitutions['__dynamodb_table_name__'] = props.tableObj.tableName;
   }
 
