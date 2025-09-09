@@ -1,8 +1,8 @@
 {
   "Comment": "A description of my state machine",
-  "StartAt": "Get all task tokens",
+  "StartAt": "Get all task tokens count",
   "States": {
-    "Get all task tokens": {
+    "Get all task tokens count": {
       "Type": "Task",
       "Arguments": {
         "TableName": "${__dynamodb_table_name__}",
@@ -14,23 +14,39 @@
           ":value": {
             "S": "${__task_token_sort_key__}"
           }
-        }
+        },
+        "Select": "COUNT"
       },
       "Resource": "arn:aws:states:::aws-sdk:dynamodb:scan",
       "Next": "Has tokens",
       "Output": {
-        "taskTokenList": "{% [$states.result.Items.(id.S)] %}"
+        "taskTokenCount": "{% $states.result.Count %}"
       }
     },
     "Has tokens": {
       "Type": "Choice",
       "Choices": [
         {
-          "Next": "For all task tokens (batched)",
-          "Condition": "{% $count($states.input.taskTokenList) > 0 %}"
+          "Next": "Get all task tokens",
+          "Condition": "{% $count($states.input.taskTokenCount) > 0 %}",
+          "Assign": {
+            "exclusiveStartKey": null
+          }
         }
       ],
       "Default": "Turn off scheduler"
+    },
+    "Get all task tokens": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:dynamodb:scan",
+      "Next": "For all task tokens (batched)",
+      "Output": {
+        "taskTokenList": "{% [$states.result.Items.(id.S)] %}"
+      },
+      "Assign": {
+        "lastEvaluatedKey": "{% $states.result.LastEvaluatedKey ? $states.result.LastEvaluatedKey : null %}"
+      },
+      "Arguments": "{% {\n  \"TableName\": \"${__dynamodb_table_name__}\",\n  \"FilterExpression\": \"#name = :value\",\n  \"ExpressionAttributeNames\": {\n    \"#name\": \"id_type\"\n  },\n  \"ExpressionAttributeValues\": {\n    \":value\": {\n      \"S\": \"${__task_token_sort_key__}\"\n    }\n  },\n  \"Limit\": 100,\n  \"ExclusiveStartKey\": $exclusiveStartKey\n} ~>\n/* Remove any keys with values */\n$sift(function($v, $k){$v != null}) %}"
     },
     "Turn off scheduler": {
       "Type": "Task",
@@ -278,7 +294,23 @@
           }
         }
       },
-      "End": true
+      "Next": "More tokens left"
+    },
+    "More tokens left": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Get all task tokens",
+          "Condition": "{% $lastEvaluatedKey ? true : false %}",
+          "Assign": {
+            "exclusiveStartKey": "{% $lastEvaluatedKey %}"
+          }
+        }
+      ],
+      "Default": "Success"
+    },
+    "Success": {
+      "Type": "Succeed"
     }
   },
   "QueryLanguage": "JSONata"
