@@ -28,7 +28,7 @@
       "Choices": [
         {
           "Next": "Get all task tokens",
-          "Condition": "{% $count($states.input.taskTokenCount) > 0 %}",
+          "Condition": "{% $states.input.taskTokenCount > 0 %}",
           "Assign": {
             "exclusiveStartKey": null
           }
