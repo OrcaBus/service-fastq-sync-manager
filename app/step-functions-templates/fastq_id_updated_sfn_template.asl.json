@@ -295,12 +295,8 @@
                 "Task token requirement outputs": {
                   "Type": "Pass",
                   "End": true,
-                  "Assign": {
-                    "Type": "Pass",
-                    "End": true,
-                    "Output": {
-                      "requirementsSetMapIter": "{% $requirementsSetMapIter %}"
-                    }
+                  "Output": {
+                    "requirementsSetMapIter": "{% $requirementsSetMapIter %}"
                   }
                 }
               }
