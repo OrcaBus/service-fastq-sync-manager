@@ -76,6 +76,17 @@
         "TaskToken": "{% $taskToken %}"
       },
       "Resource": "arn:aws:states:::aws-sdk:sfn:sendTaskSuccess",
+      "End": true,
+      "Catch": [
+        {
+          "ErrorEquals": ["Sfn.TaskTimedOutException"],
+          "Comment": "Task timed out",
+          "Next": "Task Timed Out"
+        }
+      ]
+    },
+    "Task Timed Out": {
+      "Type": "Pass",
       "End": true
     }
   },
