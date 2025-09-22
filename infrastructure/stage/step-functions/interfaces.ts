@@ -74,7 +74,10 @@ export const stepFunctionLambdaMap: Record<StepFunctionsName, LambdaNameList[]> 
   initialiseTaskTokenForFastqSetIdList: ['getFastqIdListFromFastqSetIdList'],
   launchFastqListRowRequirements: ['getFastqAndRemainingRequirements', 'launchRequirementJob'],
   fastqIdUpdated: ['checkFastqIdListAgainstRequirements'],
-  externalHeartbeatMonitor: ['checkRunningJobsForFastqIdList'],
+  externalHeartbeatMonitor: [
+    'checkRunningJobsForFastqIdList',
+    'checkFastqIdListAgainstRequirements',
+  ],
 };
 
 export interface SfnProps {
