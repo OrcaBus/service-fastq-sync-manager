@@ -59,7 +59,7 @@
     "For all task tokens (batched)": {
       "Type": "Map",
       "Label": "Foralltasktokensbatched",
-      "MaxConcurrency": 5,
+      "MaxConcurrency": 1,
       "Items": "{% $states.input.taskTokenList %}",
       "ItemBatcher": {
         "MaxItemsPerBatch": 10
@@ -106,7 +106,8 @@
                   },
                   "Next": "Check jobs running for fastq id list",
                   "Assign": {
-                    "fastqIdListMapIter": "{% $states.result.Item.fastq_id_set.SS ? $states.result.Item.fastq_id_set.SS : [] %}"
+                    "fastqIdListMapIter": "{% $states.result.Item.fastq_id_set.SS ? $states.result.Item.fastq_id_set.SS : [] %}",
+                    "requirementsListMapIter": "{% $states.result.Item.requirements_set.SS ? $states.result.Item.requirements_set.SS : [] %}"
                   }
                 },
                 "Check jobs running for fastq id list": {
@@ -118,7 +119,8 @@
                   "Arguments": {
                     "FunctionName": "${__check_running_jobs_for_fastq_id_list_lambda_function_arn__}",
                     "Payload": {
-                      "fastqIdList": "{% $fastqIdListMapIter %}"
+                      "fastqIdList": "{% $fastqIdListMapIter %}",
+                      "requirements": "{% $requirementsListMapIter %}"
                     }
                   },
                   "Retry": [
@@ -146,7 +148,61 @@
                       "Comment": "If jobs running or (once every few hours just to clear out dud tokens)"
                     }
                   ],
+                  "Default": "Check fastq id list against missing requirements"
+                },
+                "Check fastq id list against missing requirements": {
+                  "Type": "Task",
+                  "Resource": "arn:aws:states:::lambda:invoke",
+                  "Arguments": {
+                    "FunctionName": "${__check_fastq_id_list_against_requirements_lambda_function_arn__}",
+                    "Payload": {
+                      "fastqIdList": "{% $fastqIdListMapIter %}",
+                      "requirements": "{% $requirementsListMapIter %}"
+                    }
+                  },
+                  "Retry": [
+                    {
+                      "ErrorEquals": [
+                        "Lambda.ServiceException",
+                        "Lambda.AWSLambdaException",
+                        "Lambda.SdkClientException",
+                        "Lambda.TooManyRequestsException"
+                      ],
+                      "IntervalSeconds": 1,
+                      "MaxAttempts": 3,
+                      "BackoffRate": 2,
+                      "JitterStrategy": "FULL"
+                    }
+                  ],
+                  "Next": "Has all requirements",
+                  "Output": {
+                    "hasAllRequirements": "{% $states.result.Payload.hasAllRequirements %}"
+                  }
+                },
+                "Has all requirements": {
+                  "Type": "Choice",
+                  "Choices": [
+                    {
+                      "Next": "SendTaskSuccess",
+                      "Condition": "{% $states.input.hasAllRequirements ? true : false %}"
+                    }
+                  ],
                   "Default": "No jobs running, task may timeout"
+                },
+                "SendTaskSuccess": {
+                  "Type": "Task",
+                  "Arguments": {
+                    "Output": {},
+                    "TaskToken": "{% $taskTokenMapIter %}"
+                  },
+                  "Resource": "arn:aws:states:::aws-sdk:sfn:sendTaskSuccess",
+                  "Catch": [
+                    {
+                      "ErrorEquals": ["Sfn.TaskTimedOutException"],
+                      "Next": "Delete objects"
+                    }
+                  ],
+                  "Next": "Delete objects"
                 },
                 "No jobs running, task may timeout": {
                   "Type": "Pass",
