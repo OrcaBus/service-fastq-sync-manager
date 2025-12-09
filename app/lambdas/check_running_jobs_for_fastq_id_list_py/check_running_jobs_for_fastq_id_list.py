@@ -92,12 +92,19 @@ def handler(event, context) -> Dict[str, bool]:
 
             # Check if the library is associated with any of the workflow runs
             for workflow_run in (bclconvert_workflow_runs + bssh_to_aws_s3_workflow_runs):
+                # Get the library id loist
                 library_id_list = list(map(
                     lambda library_iter_: library_iter_['libraryId'],
                     get_workflow_run(workflow_run['orcabusId'])['libraries']
                 ))
 
-                if any(library_id == library_id_iter_ for library_id_iter_ in library_id_list):
+                # Check if our library id is in the list
+                if (
+                        any(
+                            library_id == library_id_iter_
+                            for library_id_iter_ in library_id_list
+                        )
+                ):
                     return {
                         "jobsRunning": True
                     }
