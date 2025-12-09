@@ -22,7 +22,10 @@ from orcabus_api_tools.fastq import (
     get_fastq_jobs as get_fastq_manager_jobs,
     get_fastq
 )
-from orcabus_api_tools.fastq_unarchiving import get_job_list_for_fastq as get_unarchiving_job_list_for_fastq
+# Fastq Unarchiving
+from orcabus_api_tools.fastq_unarchiving import (
+    get_job_list_for_fastq as get_unarchiving_job_list_for_fastq
+)
 
 # Globals
 ACTIVE_JOB_STATUS_LIST_TYPE = Literal['PENDING', 'RUNNING']
@@ -33,8 +36,8 @@ BSSH_TO_AWS_S3_WORKFLOW_NAME = 'bssh-to-aws-s3'
 ACTIVE_WORKFLOW_STATUS_LIST = [
     'DRAFT',
     'READY',
+    'STARTING'
     'RUNNING',
-    'SUCCEEDED'
 ]
 
 
@@ -75,16 +78,16 @@ def handler(event, context) -> Dict[str, bool]:
         # Get the library id of the fastq
         library_id = get_fastq(fastq_id)['library']['libraryId']
 
-        # Check workflow runs for fastq unarchiver associated with this library
-        for status_iter in ACTIVE_WORKFLOW_STATUS_LIST:
+        # Check workflow runs for bclconvert + bssh-to-aws-s3 associated with this library
+        for workflow_status_iter in ACTIVE_WORKFLOW_STATUS_LIST:
             # Check bclconvert workflow runs
             bclconvert_workflow_runs = list_workflow_runs(
                 workflow_name=BCLCONVERT_WORKFLOW_NAME,
-                current_status=status_iter,
+                current_status=workflow_status_iter,
             )
             bssh_to_aws_s3_workflow_runs = list_workflow_runs(
                 workflow_name=BSSH_TO_AWS_S3_WORKFLOW_NAME,
-                current_status=status_iter,
+                current_status=workflow_status_iter,
             )
 
             # Check if the library is associated with any of the workflow runs
@@ -94,7 +97,7 @@ def handler(event, context) -> Dict[str, bool]:
                     get_workflow_run(workflow_run['orcabusId'])['libraries']
                 ))
 
-                if any(library_id == library_id_iter for library_id_iter in library_id_list):
+                if any(library_id == library_id_iter_ for library_id_iter_ in library_id_list):
                     return {
                         "jobsRunning": True
                     }
