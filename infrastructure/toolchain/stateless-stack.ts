@@ -21,6 +21,9 @@ export class StatelessStack extends cdk.Stack {
       },
       pipelineName: 'StatelessFastqSyncManagerDeploymentPipeline',
       cdkSynthCmd: ['pnpm install --frozen-lockfile --ignore-scripts', 'pnpm cdk-stateless synth'],
+      unitAppTestConfig: {
+        command: [], // TODO https://github.com/OrcaBus/service-fastq-sync-manager/issues/37
+      },
     });
   }
 }

@@ -1,5 +1,5 @@
 {
-  "name": "template-service-base",
+  "name": "service-fastq-sync-manager",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -22,25 +22,25 @@
   "license": "MIT",
   "packageManager": "pnpm@10.24.0+sha512.01ff8ae71b4419903b65c60fb2dc9d34cf8bb6e06d03bde112ef38f7a34d6904c424ba66bea5cdcf12890230bf39f9580473140ed9c946fef328b6e5238a345a",
   "devDependencies": {
-    "@eslint/js": "^9.39.1",
-    "@types/jest": "^29.5.14",
-    "@types/node": "^22.19.2",
-    "aws-cdk": "^2.1033.0",
+    "@eslint/js": "^9.39.2",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.0.10",
+    "aws-cdk": "^2.1101.0",
     "cdk-nag": "^2.37.55",
-    "eslint": "^9.39.1",
-    "globals": "^16.5.0",
-    "jest": "^29.7.0",
-    "prettier": "^3.7.4",
+    "eslint": "^9.39.2",
+    "globals": "^17.0.0",
+    "jest": "^30.2.0",
+    "prettier": "^3.8.1",
     "test-js": "^0.0.4",
     "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.49.0"
+    "typescript-eslint": "^8.53.1"
   },
   "dependencies": {
-    "@aws-cdk/aws-lambda-python-alpha": "2.231.0-alpha.0",
-    "@orcabus/platform-cdk-constructs": "0.0.102",
-    "aws-cdk-lib": "^2.231.0",
-    "constructs": "^10.4.3"
+    "@aws-cdk/aws-lambda-python-alpha": "2.235.1-alpha.0",
+    "@orcabus/platform-cdk-constructs": "1.0.7",
+    "aws-cdk-lib": "^2.235.1",
+    "constructs": "^10.4.5"
   }
 }
