@@ -116,7 +116,7 @@ export function buildFastqSyncToolsLayer(scope: Construct): PythonLayerVersion {
      */
   return new PythonLayerVersion(scope, 'fastq-sync-tools-layer', {
     entry: path.join(LAYERS_ROOT, 'fastq_sync_tools_layer'),
-    compatibleRuntimes: [lambda.Runtime.PYTHON_3_12],
+    compatibleRuntimes: [lambda.Runtime.PYTHON_3_14],
     compatibleArchitectures: [lambda.Architecture.ARM_64],
     bundling: {
       image: getPythonUvDockerImage(),
