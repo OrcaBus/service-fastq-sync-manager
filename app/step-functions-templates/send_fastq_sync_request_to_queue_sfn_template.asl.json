@@ -1,0 +1,16 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Send message to queue",
+  "States": {
+    "Send message to queue": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sqs:sendMessage",
+      "Arguments": {
+        "MessageBody": "{% $states.input %}",
+        "QueueUrl": "${__sqs_queue_url__}"
+      },
+      "End": true
+    }
+  },
+  "QueryLanguage": "JSONata"
+}

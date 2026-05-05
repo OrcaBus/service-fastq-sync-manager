@@ -8,11 +8,8 @@ import { EventBridgeRuleObject } from '../event-rules/interfaces';
 import { SfnObject } from '../step-functions/interfaces';
 
 export type EventTargets =
-  // Legacy
-  | 'fastqSetSyncLegacyTaskTokenToFastqSetInitialiserSfn'
   // Task token requests to sfns
   | 'fastqSyncTaskTokenToFastqSetInitialiserSfn'
-  | 'fastqSetSyncTaskTokenToFastqIdInitialiserSfn'
   // Fastq ID Updated
   | 'fastqListRowStateChangeToFastqIdUpdatedSfn'
   // Fastq Unarchiving updated
@@ -21,11 +18,8 @@ export type EventTargets =
   | 'heartBeatMonitorSchedulerToExternalHeartBeatMonitorSfn';
 
 export const eventTargetsList: EventTargets[] = [
-  // Legacy
-  'fastqSetSyncLegacyTaskTokenToFastqSetInitialiserSfn',
   // Task token requests to sfns
   'fastqSyncTaskTokenToFastqSetInitialiserSfn',
-  'fastqSetSyncTaskTokenToFastqIdInitialiserSfn',
   // Fastq ID Updated
   'fastqListRowStateChangeToFastqIdUpdatedSfn',
   // Fastq Unarchiving updated

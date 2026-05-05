@@ -4,7 +4,6 @@ import {
   DEFAULT_HEART_BEAT_INTERVAL,
   FASTQ_STATE_CHANGE_EVENT_DETAIL_TYPE,
   FASTQ_SYNC_EVENT_DETAIL_TYPE,
-  FASTQ_SYNC_LEGACY_EVENT_DETAIL_TYPE,
 } from '../constants';
 import {
   FASTQ_MANAGER_EVENT_SOURCE,
@@ -20,20 +19,6 @@ import {
 } from './interfaces';
 
 /**
- * Legacy event
- */
-
-function createNewFastqSetIdLegacyEventSyncEventPattern(): EventPattern {
-  return {
-    detailType: [FASTQ_SYNC_LEGACY_EVENT_DETAIL_TYPE],
-    detail: {
-      taskToken: [{ exists: true }],
-      fastqSetId: [{ exists: true }],
-    },
-  };
-}
-
-/**
  * Listen to new fastq sync events
  */
 
@@ -44,18 +29,6 @@ function createNewFastqIdListEventSyncEventPattern(): EventPattern {
       taskToken: [{ exists: true }],
       payload: {
         fastqIdList: [{ exists: true }],
-      },
-    },
-  };
-}
-
-function createNewFastqSetIdListEventSyncEventPattern(): EventPattern {
-  return {
-    detailType: [FASTQ_SYNC_EVENT_DETAIL_TYPE],
-    detail: {
-      taskToken: [{ exists: true }],
-      payload: {
-        fastqSetIdList: [{ exists: true }],
       },
     },
   };
@@ -114,19 +87,6 @@ export function buildAllEventRules(
   const eventRulesList: EventBridgeRuleObject[] = [];
   for (const eventRule of eventRuleNameList) {
     switch (eventRule) {
-      // Legacy fastq sync event
-      case 'fastqSetSyncLegacyTaskTokenInitialisedRule': {
-        eventRulesList.push({
-          ruleName: eventRule,
-          ruleObject: new events.Rule(scope, eventRule, {
-            ruleName: eventRule,
-            eventBus: props.eventBus,
-            eventPattern: createNewFastqSetIdLegacyEventSyncEventPattern(),
-          }),
-        });
-        break;
-      }
-
       // Task token initialised for new fastq sync event
       case 'fastqSyncTaskTokenInitialisedRule': {
         eventRulesList.push({
@@ -135,17 +95,6 @@ export function buildAllEventRules(
             ruleName: eventRule,
             eventBus: props.eventBus,
             eventPattern: createNewFastqIdListEventSyncEventPattern(),
-          }),
-        });
-        break;
-      }
-      case 'fastqSetSyncTaskTokenInitialisedRule': {
-        eventRulesList.push({
-          ruleName: eventRule,
-          ruleObject: new events.Rule(scope, eventRule, {
-            ruleName: eventRule,
-            eventBus: props.eventBus,
-            eventPattern: createNewFastqSetIdListEventSyncEventPattern(),
           }),
         });
         break;

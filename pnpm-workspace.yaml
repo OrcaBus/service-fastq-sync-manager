@@ -1,5 +1,2 @@
-onlyBuiltDependencies:
-  - unrs-resolver
-
-overrides:
-  diff@<4.0.4: '>=4.0.4'
+allowBuilds:
+  unrs-resolver: true
