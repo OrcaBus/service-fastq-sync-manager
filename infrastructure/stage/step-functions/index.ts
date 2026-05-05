@@ -23,8 +23,9 @@ import {
 } from './interfaces';
 import { camelCaseToSnakeCase } from '../utils';
 import { NagSuppressions } from 'cdk-nag';
-import { HEART_BEAT_SCHEDULER_RULE_NAME, SFN_PREFIX, STEP_FUNCTIONS_ROOT } from '../constants';
+import { HEART_BEAT_SCHEDULER_RULE_NAME, STACK_PREFIX, STEP_FUNCTIONS_ROOT } from '../constants';
 import { StateMachine } from 'aws-cdk-lib/aws-stepfunctions';
+import { LambdaObject } from '../lambdas/interfaces';
 
 /** Step Function stuff */
 function createStateMachineDefinitionSubstitutions(props: SfnProps): {
@@ -42,7 +43,7 @@ function createStateMachineDefinitionSubstitutions(props: SfnProps): {
   for (const lambdaObject of lambdaFunctions) {
     const sfnSubstitutionKey = `__${camelCaseToSnakeCase(lambdaObject.lambdaName)}_lambda_function_arn__`;
     definitionSubstitutions[sfnSubstitutionKey] =
-      lambdaObject.lambdaFunction.currentVersion.functionArn;
+      lambdaObject.lambdaFunction.latestVersion.functionArn;
   }
 
   /* Sfn Requirements */
@@ -53,13 +54,17 @@ function createStateMachineDefinitionSubstitutions(props: SfnProps): {
 
   if (sfnRequirements.needsSfnExecutionAccess) {
     definitionSubstitutions['__launch_requirements_sfn_arn__'] =
-      `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:stateMachine:${SFN_PREFIX}-${launchFastqListRowRequirementsSfnName}`;
+      `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:stateMachine:${STACK_PREFIX}--${launchFastqListRowRequirementsSfnName}`;
     definitionSubstitutions['__initialise_task_token_for_fastq_id_list_sfn_arn__'] =
-      `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:stateMachine:${SFN_PREFIX}-${initialiseTaskTokenForFastqIdListSfnName}`;
+      `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:stateMachine:${STACK_PREFIX}--${initialiseTaskTokenForFastqIdListSfnName}`;
   }
 
   if (sfnRequirements.needsHeartBeatRuleSwitchAccess) {
     definitionSubstitutions['__heartbeat_scheduler_rule_name__'] = HEART_BEAT_SCHEDULER_RULE_NAME;
+  }
+
+  if (sfnRequirements.needsSqsSendMessagePermissions) {
+    definitionSubstitutions['__sqs_queue_url__'] = props.sqsQueue.queueUrl;
   }
 
   return definitionSubstitutions;
@@ -76,13 +81,30 @@ function wireUpStateMachinePermissions(scope: Construct, props: SfnPropsWithObje
 
   /* Allow the state machine to invoke the lambda function */
   for (const lambdaObject of lambdaFunctions) {
-    lambdaObject.lambdaFunction.currentVersion.grantInvoke(props.stateMachineObj);
+    lambdaObject.lambdaFunction.grantInvoke(props.stateMachineObj);
   }
+  // Will need cdk nag suppressions for this
+  // Because we are using a wildcard for an IAM Resource policy
+  NagSuppressions.addResourceSuppressions(
+    props.stateMachineObj,
+    [
+      {
+        id: 'AwsSolutions-IAM5',
+        reason: 'Need ability to run any version of the lambda',
+      },
+    ],
+    true
+  );
 
   /* Permissions */
   /* Grant the state machine permissions to read from the DynamoDB table */
   if (sfnRequirements.needsDbAccess) {
     props.tableObj.grantReadWriteData(props.stateMachineObj);
+  }
+
+  if (sfnRequirements.needsSqsSendMessagePermissions) {
+    // Ability to send messages to a queue
+    props.sqsQueue.grantSendMessages(props.stateMachineObj);
   }
 
   // Grant permissions to send task success/failure/heartbeat
@@ -162,6 +184,28 @@ function wireUpStateMachinePermissions(scope: Construct, props: SfnPropsWithObje
       ]
     );
   }
+
+  if (props.stateMachineName === 'initialiseTaskTokenForFastqIdList') {
+    /* Get the lambda object */
+    const handleSqsMessagesLambdaObject = <LambdaObject>(
+      props.lambdaObjects.find((lambdaObject) => lambdaObject.lambdaName === 'handleMessages')
+    );
+    /* Grant permissions to the lambda object */
+    props.stateMachineObj.grantStartExecution(handleSqsMessagesLambdaObject.lambdaFunction);
+
+    /* We also need to add permissions for the queue url */
+
+    NagSuppressions.addResourceSuppressions(
+      props.stateMachineObj,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Needs permissions to start execution',
+        },
+      ],
+      true
+    );
+  }
 }
 
 function buildStepFunction(scope: Construct, props: SfnProps): SfnObject {
@@ -169,7 +213,7 @@ function buildStepFunction(scope: Construct, props: SfnProps): SfnObject {
 
   /* Create the state machine definition substitutions */
   const stateMachine = new sfn.StateMachine(scope, props.stateMachineName, {
-    stateMachineName: `${SFN_PREFIX}-${props.stateMachineName}`,
+    stateMachineName: `${STACK_PREFIX}--${props.stateMachineName}`,
     definitionBody: sfn.DefinitionBody.fromFile(
       path.join(STEP_FUNCTIONS_ROOT, sfnNameToSnakeCase + `_sfn_template.asl.json`)
     ),
@@ -236,8 +280,8 @@ export function buildAllStepFunctions(scope: Construct, props: SfnsProps): SfnOb
       sfnObject.addToRolePolicy(
         new iam.PolicyStatement({
           resources: [
-            `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:stateMachine:${SFN_PREFIX}-${launchFastqListRowRequirementsSfnName}`,
-            `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:stateMachine:${SFN_PREFIX}-${initialiseTaskTokenForFastqIdListSfnName}`,
+            `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:stateMachine:${STACK_PREFIX}--${launchFastqListRowRequirementsSfnName}`,
+            `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:stateMachine:${STACK_PREFIX}--${initialiseTaskTokenForFastqIdListSfnName}`,
           ],
           actions: ['states:StartExecution'],
         })

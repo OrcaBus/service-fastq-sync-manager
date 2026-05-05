@@ -13,9 +13,14 @@ Outputs:
 * unsatisfiedRequirements
 
 """
+
+# Standard imports
 from typing import List
 
+# Orcabus imports
 from orcabus_api_tools.fastq import get_fastq
+
+# Local layer imports
 from fastq_sync_tools import check_fastq_against_requirements_list, REQUIREMENT
 
 

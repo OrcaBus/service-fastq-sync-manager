@@ -47,7 +47,7 @@
                 "Comment": "Fastq Id has task tokens",
                 "Condition": "{% $states.input.Item ? true : false %}",
                 "Output": {
-                  "taskTokens": "{% $states.input.Item.task_token_set.SS %}"
+                  "taskTokens": "{% $states.input.Item.task_token_set.SS ? $states.input.Item.task_token_set.SS : [] %}"
                 }
               }
             ],

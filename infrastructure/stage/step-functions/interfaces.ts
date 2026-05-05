@@ -1,12 +1,13 @@
 import { StateMachine } from 'aws-cdk-lib/aws-stepfunctions';
-import { LambdaNameList, LambdaObject } from '../lambdas/interfaces';
+import { LambdaName, LambdaObject } from '../lambdas/interfaces';
 import { IEventBus } from 'aws-cdk-lib/aws-events';
 import { ITableV2 } from 'aws-cdk-lib/aws-dynamodb';
+import { IQueue } from 'aws-cdk-lib/aws-sqs';
 
 export type StepFunctionsName =
   // Initialisation
+  | 'sendFastqSyncRequestToQueue'
   | 'initialiseTaskTokenForFastqIdList'
-  | 'initialiseTaskTokenForFastqSetIdList'
   // Launch jobs as required
   | 'launchFastqListRowRequirements'
   // Listen to fastq related events to release task tokens
@@ -16,8 +17,8 @@ export type StepFunctionsName =
 
 export const stepFunctionsNames: StepFunctionsName[] = [
   // Initialisation
+  'sendFastqSyncRequestToQueue',
   'initialiseTaskTokenForFastqIdList',
-  'initialiseTaskTokenForFastqSetIdList',
   // Launch jobs as required
   'launchFastqListRowRequirements',
   // Listen to fastq related events to release task tokens
@@ -37,19 +38,19 @@ export interface StepFunctionsRequirements {
   needsSendTaskExecutionAccess?: boolean;
   needsHeartBeatRuleSwitchAccess?: boolean;
   needsDistributedMapPermissions?: boolean;
+  needsSqsSendMessagePermissions?: boolean;
 }
 
 export const stepFunctionsRequirementsMap: Record<StepFunctionsName, StepFunctionsRequirements> = {
   // Initialisation
+  sendFastqSyncRequestToQueue: {
+    needsSqsSendMessagePermissions: true,
+  },
   initialiseTaskTokenForFastqIdList: {
     needsDbAccess: true,
     needsSfnExecutionAccess: true,
     needsSendTaskExecutionAccess: true,
     needsHeartBeatRuleSwitchAccess: true,
-  },
-  initialiseTaskTokenForFastqSetIdList: {
-    needsSfnExecutionAccess: true,
-    needsSendTaskExecutionAccess: true,
   },
   // Launch jobs as required
   launchFastqListRowRequirements: {},
@@ -69,9 +70,9 @@ export const stepFunctionsRequirementsMap: Record<StepFunctionsName, StepFunctio
 };
 
 // Map the lambda functions to their step function names
-export const stepFunctionLambdaMap: Record<StepFunctionsName, LambdaNameList[]> = {
-  initialiseTaskTokenForFastqIdList: ['checkFastqIdListAgainstRequirements'],
-  initialiseTaskTokenForFastqSetIdList: ['getFastqIdListFromFastqSetIdList'],
+export const stepFunctionLambdaMap: Record<StepFunctionsName, LambdaName[]> = {
+  sendFastqSyncRequestToQueue: [],
+  initialiseTaskTokenForFastqIdList: ['checkFastqIdListAgainstRequirements', 'unlockCallbackId'],
   launchFastqListRowRequirements: ['getFastqAndRemainingRequirements', 'launchRequirementJob'],
   fastqIdUpdated: ['checkFastqIdListAgainstRequirements'],
   externalHeartbeatMonitor: [
@@ -80,22 +81,25 @@ export const stepFunctionLambdaMap: Record<StepFunctionsName, LambdaNameList[]> 
   ],
 };
 
-export interface SfnProps {
-  // Name of the state machine
-  stateMachineName: StepFunctionsName;
+export interface SfnsProps {
   // List of lambda functions that are used in the state machine
   lambdaObjects: LambdaObject[];
   // Event Objects
   eventBus: IEventBus;
   // Table objects
   tableObj: ITableV2;
+  // Queue
+  sqsQueue: IQueue;
+}
+
+export interface SfnProps extends SfnsProps {
+  // Name of the state machine
+  stateMachineName: StepFunctionsName;
 }
 
 export interface SfnPropsWithObject extends SfnProps {
   stateMachineObj: StateMachine;
 }
-
-export type SfnsProps = Omit<SfnProps, 'stateMachineName'>;
 
 export interface SfnObject {
   stateMachineName: StepFunctionsName;
