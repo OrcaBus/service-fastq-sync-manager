@@ -11,6 +11,7 @@ import {
 } from './interfaces';
 import * as path from 'path';
 import * as cdk from 'aws-cdk-lib';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import { camelCaseToSnakeCase } from '../utils';
 import { getPythonUvDockerImage, PythonUvFunction } from '@orcabus/platform-cdk-constructs/lambda';
 import {
@@ -83,6 +84,32 @@ function buildLambda(scope: Construct, props: LambdaProps): LambdaObject {
     lambdaFunction.addEnvironment(
       'INITIALISE_TASK_TOKEN_FOR_FASTQ_ID_LIST_SFN_ARN',
       `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:stateMachine:${STACK_PREFIX}--${props.initialiseTaskTokenForFastqIdListSfnName}`
+    );
+  }
+
+  // Needs Callback Permissions
+  if (lambdaRequirements.needsCallbackPermissions) {
+    // Grant write permissions to allow the lambda to unlock durable executions
+    // We don't know the exact resource ARNs here since they are created dynamically
+    lambdaFunction.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ['lambda:SendDurableExecutionCallbackSuccess'],
+        resources: [
+          `arn:aws:lambda:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:function:*:*/durable-execution/*/*`,
+        ],
+      })
+    );
+
+    // Add resource suppressions
+    NagSuppressions.addResourceSuppressions(
+      lambdaFunction,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Send DurableExecutionCallback success permissions to dynamic resources.',
+        },
+      ],
+      true
     );
   }
 
