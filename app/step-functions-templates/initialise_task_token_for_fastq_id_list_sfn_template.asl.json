@@ -10,6 +10,7 @@
         "fastqIdList": "{% $states.input.payload.fastqIdList %}",
         "requirements": "{% $states.input.payload.requirements %}",
         "isUnarchivingAllowed": "{% $states.input.payload.forceUnarchiving ? true : false %}",
+        "callbackId": "{% $states.input.callbackId %}",
         "dynamoDbTableName": "${__dynamodb_table_name__}",
         "dynamoDbIdTypeKeys": {
           "fastqId": "FASTQ_ID",
@@ -67,6 +68,32 @@
         "Cause": "{% $parse($states.input.error.Cause).errorMessage %}"
       },
       "Resource": "arn:aws:states:::aws-sdk:sfn:sendTaskFailure",
+      "Next": "Unlock callback id"
+    },
+    "Unlock callback id": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Output": "{% $states.result.Payload %}",
+      "Arguments": {
+        "FunctionName": "${__unlock_callback_id_lambda_function_arn__}",
+        "Payload": {
+          "callbackId": "{% $callbackId %}"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
       "End": true
     },
     "Meets requirements": {
@@ -243,7 +270,7 @@
         "TaskToken": "{% $taskToken %}"
       },
       "Resource": "arn:aws:states:::aws-sdk:sfn:sendTaskSuccess",
-      "End": true
+      "Next": "Unlock callback id"
     },
     "For each fastq list row id": {
       "Type": "Map",
@@ -273,7 +300,7 @@
           }
         }
       },
-      "End": true
+      "Next": "Unlock callback id"
     }
   },
   "QueryLanguage": "JSONata"
