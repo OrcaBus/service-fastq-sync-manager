@@ -30,7 +30,7 @@ export const DEFAULT_SLACK_TOPIC_NAME = 'AwsChatBotTopic';
 
 // Sqs Queue Name
 export const DEFAULT_SQS_QUEUE_NAME = 'FastqSyncRequestQueue';
-export const DEFAULT_QUEUE_TIMEOUT = Duration.seconds(300);
+export const DEFAULT_QUEUE_TIMEOUT = Duration.seconds(360);
 export const DEFAULT_MAX_FASTQ_SYNC_REQUEST_CONCURRENCY = 20;
 
 // Step functions constants
