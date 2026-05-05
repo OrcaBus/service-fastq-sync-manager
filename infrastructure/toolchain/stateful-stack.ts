@@ -24,9 +24,6 @@ export class StatefulStack extends cdk.Stack {
       },
       pipelineName: 'StatefulFastqSyncManagerDeploymentPipeline',
       cdkSynthCmd: ['pnpm install --frozen-lockfile --ignore-scripts', 'pnpm cdk-stateful synth'],
-      unitAppTestConfig: {
-        command: [], // TODO https://github.com/OrcaBus/service-fastq-sync-manager/issues/37
-      },
     });
   }
 }
