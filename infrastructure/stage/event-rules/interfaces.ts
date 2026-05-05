@@ -7,11 +7,8 @@ import { Duration } from 'aws-cdk-lib';
 import { HEART_BEAT_SCHEDULER_RULE_NAME } from '../constants';
 
 export type EventRuleName =
-  // Legacy rule
-  | 'fastqSetSyncLegacyTaskTokenInitialisedRule'
   // Task Token Initialised rules
   | 'fastqSyncTaskTokenInitialisedRule'
-  | 'fastqSetSyncTaskTokenInitialisedRule'
   // Fastq List row updated
   | 'fastqStateChange'
   // Fastq Unarchiving updated
@@ -20,11 +17,8 @@ export type EventRuleName =
   | typeof HEART_BEAT_SCHEDULER_RULE_NAME;
 
 export const eventRuleNameList: EventRuleName[] = [
-  // Legacy rule
-  'fastqSetSyncLegacyTaskTokenInitialisedRule',
   // Task Token Initialised rules
   'fastqSyncTaskTokenInitialisedRule',
-  'fastqSetSyncTaskTokenInitialisedRule',
   // Fastq List row updated
   'fastqStateChange',
   // Fastq Unarchiving updated

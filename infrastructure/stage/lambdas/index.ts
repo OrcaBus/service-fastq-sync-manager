@@ -9,11 +9,19 @@ import {
   LambdaProps,
   lambdaRequirementsMap,
 } from './interfaces';
+import * as path from 'path';
+import * as cdk from 'aws-cdk-lib';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import { camelCaseToSnakeCase } from '../utils';
 import { getPythonUvDockerImage, PythonUvFunction } from '@orcabus/platform-cdk-constructs/lambda';
-import * as path from 'path';
-import { LAMBDA_ROOT, LAYERS_ROOT } from '../constants';
+import {
+  DEFAULT_MAX_FASTQ_SYNC_REQUEST_CONCURRENCY,
+  LAMBDA_ROOT,
+  LAYERS_ROOT,
+  STACK_PREFIX,
+} from '../constants';
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
+import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 
 /** Lambda stuff */
 function buildLambda(scope: Construct, props: LambdaProps): LambdaObject {
@@ -23,33 +31,22 @@ function buildLambda(scope: Construct, props: LambdaProps): LambdaObject {
   // Create the lambda function
   const lambdaFunction = new PythonUvFunction(scope, props.lambdaName, {
     entry: path.join(LAMBDA_ROOT, lambdaNameToSnakeCase + '_py'),
-    runtime: lambda.Runtime.PYTHON_3_12,
+    runtime: lambda.Runtime.PYTHON_3_14,
     architecture: lambda.Architecture.ARM_64,
     index: lambdaNameToSnakeCase + '.py',
     handler: 'handler',
-    timeout: Duration.seconds(60),
+    timeout: props.lambdaName === 'handleMessages' ? Duration.seconds(300) : Duration.seconds(60),
     memorySize: 2048,
     includeOrcabusApiToolsLayer: lambdaRequirements.needsOrcabusApiToolsLayer,
+    durableConfig: lambdaRequirements.needsDurableFunctionWrapper
+      ? {
+          executionTimeout: Duration.minutes(60),
+          retentionPeriod: Duration.days(1),
+        }
+      : undefined,
   });
 
-  // Add in the fastq sync layer if required
-  if (lambdaRequirements.needsFastqSyncLayer) {
-    lambdaFunction.addLayers(props.fastqSyncLayer);
-  }
-
-  // AwsSolutions-L1 - We'll migrate to PYTHON_3_13 ASAP, soz
   // AwsSolutions-IAM4 - We need to add this for the lambda to work
-  NagSuppressions.addResourceSuppressions(
-    lambdaFunction,
-    [
-      {
-        id: 'AwsSolutions-L1',
-        reason: 'Will migrate to PYTHON_3_13 ASAP, soz',
-      },
-    ],
-    true
-  );
-
   NagSuppressions.addResourceSuppressions(
     lambdaFunction,
     [
@@ -60,6 +57,61 @@ function buildLambda(scope: Construct, props: LambdaProps): LambdaObject {
     ],
     true
   );
+
+  // Add in the fastq sync layer if required
+  if (lambdaRequirements.needsFastqSyncLayer) {
+    lambdaFunction.addLayers(props.fastqSyncLayer);
+  }
+
+  // If the lambda has an SQS event source, we need to add this in
+  // Generate Event Request uses the launch ICA Source Event Queue
+  if (props.lambdaName === 'handleMessages') {
+    // Find the SQS queue from the props
+    lambdaFunction.currentVersion.addEventSource(
+      new SqsEventSource(props.sqsQueue, {
+        maxConcurrency: DEFAULT_MAX_FASTQ_SYNC_REQUEST_CONCURRENCY,
+        // Allow only one message per batch to be processed
+        batchSize: 1,
+      })
+    );
+  }
+
+  // Add in sfn env vars
+  if (props.lambdaName === 'handleMessages') {
+    // Add the step function
+    // Update the environment variable for the step function name
+    // When we generate the state machine we will give the lambda permission to start the execution
+    lambdaFunction.addEnvironment(
+      'INITIALISE_TASK_TOKEN_FOR_FASTQ_ID_LIST_SFN_ARN',
+      `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:stateMachine:${STACK_PREFIX}--${props.initialiseTaskTokenForFastqIdListSfnName}`
+    );
+  }
+
+  // Needs Callback Permissions
+  if (lambdaRequirements.needsCallbackPermissions) {
+    // Grant write permissions to allow the lambda to unlock durable executions
+    // We don't know the exact resource ARNs here since they are created dynamically
+    lambdaFunction.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ['lambda:SendDurableExecutionCallbackSuccess'],
+        resources: [
+          `arn:aws:lambda:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:function:*:*/durable-execution/*/*`,
+        ],
+      })
+    );
+
+    // Add resource suppressions
+    NagSuppressions.addResourceSuppressions(
+      lambdaFunction,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Send DurableExecutionCallback success permissions to dynamic resources.',
+        },
+      ],
+      true
+    );
+  }
 
   /* Return the function */
   return {
@@ -91,7 +143,7 @@ export function buildFastqSyncToolsLayer(scope: Construct): PythonLayerVersion {
      */
   return new PythonLayerVersion(scope, 'fastq-sync-tools-layer', {
     entry: path.join(LAYERS_ROOT, 'fastq_sync_tools_layer'),
-    compatibleRuntimes: [lambda.Runtime.PYTHON_3_12],
+    compatibleRuntimes: [lambda.Runtime.PYTHON_3_14],
     compatibleArchitectures: [lambda.Architecture.ARM_64],
     bundling: {
       image: getPythonUvDockerImage(),

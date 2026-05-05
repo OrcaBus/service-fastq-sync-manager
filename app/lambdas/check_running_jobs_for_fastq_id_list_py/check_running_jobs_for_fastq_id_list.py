@@ -13,6 +13,7 @@ Otherwise we return 'false'.
 
 # Standard library imports
 from typing import List, Literal, Dict
+from requests import HTTPError
 
 # Layer imports
 # Workflow
@@ -55,16 +56,20 @@ def handler(event, context) -> Dict[str, bool]:
     # Iterate over fastq ids
     # If any of them have jobs running, return true immediately
     for fastq_id in fastq_id_list:
-        # Check fastq manager jobs
-        if len(
-                list(filter(
-                    lambda job: job['status'] in ACTIVE_JOB_STATUS_LIST,
-                    get_fastq_manager_jobs(fastq_id=fastq_id)
-                ))
-        ) > 0:
-            return {
-                "jobsRunning": True
-            }
+        try:
+            # Check fastq manager jobs
+            if len(
+                    list(filter(
+                        lambda job: job['status'] in ACTIVE_JOB_STATUS_LIST,
+                        get_fastq_manager_jobs(fastq_id=fastq_id)
+                    ))
+            ) > 0:
+                return {
+                    "jobsRunning": True
+                }
+        except HTTPError:
+            # If we get an error, assume no jobs (fastqs may no longer exist)
+            continue
         # Check fastq unarchiver jobs
         for active_status in ACTIVE_JOB_STATUS_LIST:
             if len(get_unarchiving_job_list_for_fastq(
@@ -76,7 +81,11 @@ def handler(event, context) -> Dict[str, bool]:
                 }
 
         # Get the library id of the fastq
-        library_id = get_fastq(fastq_id)['library']['libraryId']
+        try:
+            library_id = get_fastq(fastq_id)['library']['libraryId']
+        except HTTPError:
+            # If we get an error, assume fastq may no longer exist
+            continue
 
         # Check workflow runs for bclconvert + bssh-to-aws-s3 associated with this library
         for workflow_status_iter in ACTIVE_WORKFLOW_STATUS_LIST:
@@ -92,12 +101,19 @@ def handler(event, context) -> Dict[str, bool]:
 
             # Check if the library is associated with any of the workflow runs
             for workflow_run in (bclconvert_workflow_runs + bssh_to_aws_s3_workflow_runs):
+                # Get the library id list
                 library_id_list = list(map(
                     lambda library_iter_: library_iter_['libraryId'],
                     get_workflow_run(workflow_run['orcabusId'])['libraries']
                 ))
 
-                if any(library_id == library_id_iter_ for library_id_iter_ in library_id_list):
+                # Check if our library id is in the list
+                if (
+                        any(
+                            library_id == library_id_iter_
+                            for library_id_iter_ in library_id_list
+                        )
+                ):
                     return {
                         "jobsRunning": True
                     }

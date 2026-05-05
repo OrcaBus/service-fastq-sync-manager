@@ -6,8 +6,10 @@ import { StatelessApplicationConfig } from './interfaces';
 
 import * as events from 'aws-cdk-lib/aws-events';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { buildAllEventRules } from './event-rules';
 import { buildAllEventBridgeTargets } from './event-targets';
+import { IQueue } from 'aws-cdk-lib/aws-sqs';
 
 export type StatelessApplicationStackProps = cdk.StackProps & StatelessApplicationConfig;
 
@@ -25,12 +27,21 @@ export class StatelessApplicationStack extends cdk.Stack {
     // Get the table from the props
     const tableObj = dynamodb.TableV2.fromTableName(this, 'table', props.tableName);
 
+    // Get the internal SQS Queue from props
+    const sqsQueue: IQueue = sqs.Queue.fromQueueArn(
+      this,
+      props.sqsQueueName,
+      `arn:aws:sqs:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:${props.sqsQueueName}`
+    );
+
     // Build lambda layer
     const fastqSyncToolsLayer = buildFastqSyncToolsLayer(this);
 
     // Build the lambda functions
     const lambdaObjects = buildAllLambdas(this, {
       fastqSyncLayer: fastqSyncToolsLayer,
+      sqsQueue: sqsQueue,
+      initialiseTaskTokenForFastqIdListSfnName: 'initialiseTaskTokenForFastqIdList',
     });
 
     // Build the state machines
@@ -38,6 +49,7 @@ export class StatelessApplicationStack extends cdk.Stack {
       lambdaObjects: lambdaObjects,
       eventBus: eventBus,
       tableObj: tableObj,
+      sqsQueue: sqsQueue,
     });
 
     // Build the event rules
