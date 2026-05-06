@@ -1,7 +1,11 @@
 name: Pull Request Tests
 
 on:
-  merge_group: {}
+  merge_group:
+    types:
+      - checks_requested
+    branches:
+      - main
   pull_request:
     paths-ignore:
       # The ignore only works only if changes to the main branch only include the following files.
