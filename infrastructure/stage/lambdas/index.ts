@@ -40,7 +40,8 @@ function buildLambda(scope: Construct, props: LambdaProps): LambdaObject {
     includeOrcabusApiToolsLayer: lambdaRequirements.needsOrcabusApiToolsLayer,
     durableConfig: lambdaRequirements.needsDurableFunctionWrapper
       ? {
-          executionTimeout: Duration.minutes(60),
+          // Cannot exceed 15 minutes for event source mappings
+          executionTimeout: Duration.minutes(15),
           retentionPeriod: Duration.days(1),
         }
       : undefined,
