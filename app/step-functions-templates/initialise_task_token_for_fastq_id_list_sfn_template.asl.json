@@ -133,7 +133,7 @@
                     "SS": "{% /* https://try.jsonata.org/slAM0Vym- */ [$keys($sift($requirements, function($v){$v = true}))] %}"
                   },
                   "expiresAt": {
-                    "N": "{% $round($toMillis($now()) / 1000) + (60 * 60 * 24 * 7) %}"
+                    "N": "{% ($round($toMillis($now()) / 1000) + (60 * 60 * 24 * 7)) ~> $string %}"
                   }
                 }
               },
@@ -228,7 +228,7 @@
                           "SS": "{% [ $taskToken ] %}"
                         },
                         "expiresAt": {
-                          "N": "{% $round($toMillis($now()) / 1000) + (60 * 60 * 24 * 7) %}"
+                          "N": "{% ($round($toMillis($now()) / 1000) + (60 * 60 * 24 * 7)) ~> $string %}"
                         }
                       }
                     },
