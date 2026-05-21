@@ -1,2 +1,8 @@
 allowBuilds:
   unrs-resolver: true
+minimumReleaseAgeExclude:
+  - '@aws-cdk/aws-lambda-python-alpha@2.256.1-alpha.0'
+  - '@aws-cdk/aws-pipes-alpha@2.256.1-alpha.0'
+  - '@aws-cdk/aws-pipes-sources-alpha@2.256.1-alpha.0'
+  - aws-cdk-lib@2.256.1
+  - aws-cdk@2.1124.1
