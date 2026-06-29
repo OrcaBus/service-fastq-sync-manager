@@ -3,7 +3,7 @@
 """
 Fastq tools to be used by various lambdas as needed
 """
-from .utils.globals import REQUIREMENT
+from .utils.globals import FASTQ_REQUIREMENT
 from .utils.utils import (
     has_active_readset,
     has_qc,
@@ -20,7 +20,7 @@ from .utils.utils import (
 
 __all__ = [
     # Requirements enum
-    "REQUIREMENT",
+    "FASTQ_REQUIREMENT",
     # All helpers
     "has_active_readset",
     "has_qc",

@@ -21,7 +21,7 @@ from typing import List
 from orcabus_api_tools.fastq import get_fastq
 
 # Local layer imports
-from fastq_sync_tools import check_fastq_against_requirements_list, REQUIREMENT
+from fastq_sync_tools import check_fastq_against_requirements_list, FASTQ_REQUIREMENT
 
 
 def handler(event, context):
@@ -29,7 +29,7 @@ def handler(event, context):
     Lambda handler function
     """
     fastq_id: str = event.get("fastqId")
-    requirements: List[REQUIREMENT] = event.get("requirements", [])
+    requirements: List[FASTQ_REQUIREMENT] = event.get("requirements", [])
     is_unarchiving_allowed: bool = event.get("isUnarchivingAllowed", False)
 
     if not fastq_id:

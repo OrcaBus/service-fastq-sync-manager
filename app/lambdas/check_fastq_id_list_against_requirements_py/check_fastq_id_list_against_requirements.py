@@ -19,7 +19,7 @@ from requests import HTTPError
 
 from orcabus_api_tools.fastq import get_fastq
 from fastq_sync_tools import check_fastq_list_against_requirements_list
-from fastq_sync_tools.utils.globals import REQUIREMENT
+from fastq_sync_tools.utils.globals import FASTQ_REQUIREMENT
 
 
 def handler(event, context):
@@ -30,7 +30,7 @@ def handler(event, context):
     :return:
     """
     fastq_id_list: List[str] = event.get("fastqIdList", [])
-    requirements: List[REQUIREMENT] = event.get("requirements", [])
+    requirements: List[FASTQ_REQUIREMENT] = event.get("requirements", [])
     is_unarchiving_allowed: bool = event.get("isUnarchivingAllowed", False)
 
     # Get fastqs

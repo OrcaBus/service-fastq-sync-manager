@@ -18,7 +18,7 @@ from orcabus_api_tools.fastq import (
 
 from orcabus_api_tools.fastq.models import (
     Job, JobType,
-    Fastq
+    Fastq, FastqSet
 )
 
 from orcabus_api_tools.fastq_unarchiving import (
@@ -32,8 +32,8 @@ from orcabus_api_tools.fastq_unarchiving.models import (
 
 # Local imports
 from .globals import (
-    REQUIREMENT,
-    ACTIVE_STORAGE_CLASSES
+    FASTQ_REQUIREMENT,
+    ACTIVE_STORAGE_CLASSES, FASTQ_SET_REQUIREMENT
 )
 
 logger = logging.getLogger(__name__)
@@ -63,6 +63,9 @@ def has_qc(fastq_obj: Fastq) -> bool:
 def has_fingerprint(fastq_obj: Fastq) -> bool:
     return fastq_obj['ntsm'] is not None
 
+
+def has_somalier_fingerprint(fastq_set_obj: FastqSet) -> bool:
+    return fastq_set_obj['somalier'] is not None
 
 def has_compression_metadata(fastq_obj: Fastq) -> bool:
     # Check active readset
@@ -181,9 +184,9 @@ def run_fastq_unarchiving_job(fastq: Fastq) -> Optional[UnarchivingJob]:
 
 def check_fastq_against_requirements_list(
         fastq_obj: Fastq,
-        requirements: List[REQUIREMENT],
+        requirements: List[FASTQ_REQUIREMENT],
         is_unarchiving_allowed: bool = False
-) -> Tuple[List[REQUIREMENT], List[REQUIREMENT]]:
+) -> Tuple[List[FASTQ_REQUIREMENT], List[FASTQ_REQUIREMENT]]:
     """
     Given a fastq list row and the requirements, split requirements into two lists, one that is satisfied and one that is not
     """
@@ -242,11 +245,34 @@ def check_fastq_against_requirements_list(
     return satisfied_requirements, unsatisfied_requirements
 
 
+def check_fastq_set_against_requirements_list(
+        fastq_set_obj: FastqSet,
+        requirements: List[FASTQ_SET_REQUIREMENT],
+) -> Tuple[List[FASTQ_REQUIREMENT], List[FASTQ_REQUIREMENT]]:
+    """
+    Given a fastq set object, check fastq set object against requirements list
+    """
+    # Initialise our lists
+    satisfied_requirements = []
+    unsatisfied_requirements = []
+
+    # Just a large if else block to check the requirements
+    for requirement_iter_ in requirements:
+        # Check fingerprint
+        if requirement_iter_ == 'hasFingerprint':
+            if has_somalier_fingerprint(fastq_set_obj):
+                satisfied_requirements.append(requirement_iter_)
+            else:
+                unsatisfied_requirements.append(requirement_iter_)
+
+    return satisfied_requirements, unsatisfied_requirements
+
+
 def check_fastq_list_against_requirements_list(
         fastq_list: List[Fastq],
-        requirements: List[REQUIREMENT],
+        requirements: List[FASTQ_REQUIREMENT],
         is_unarchiving_allowed: bool = False,
-) -> Tuple[List[REQUIREMENT], List[REQUIREMENT]]:
+) -> Tuple[List[FASTQ_REQUIREMENT], List[FASTQ_REQUIREMENT]]:
     """
     Given a list of fastqs and the requirements,
     split the fastq list into two lists,
