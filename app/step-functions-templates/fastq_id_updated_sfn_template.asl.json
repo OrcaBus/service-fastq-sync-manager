@@ -308,7 +308,8 @@
             "Assign": {
               "requirementsSet": "{% /* https://try.jsonata.org/HKzKoBGs4 */\n[(\n  /* Collect the requirement maps set */\n  $states.result.(requirementsSetMapIter)\n  ~>\n  /* Select distinct outputs */\n  $distinct\n)]\n %}"
             },
-            "Next": "Launch requirements for fastq list row"
+            "Next": "Launch requirements for fastq list row",
+            "MaxConcurrency": 1
           },
           "Launch requirements for fastq list row": {
             "Type": "Task",
@@ -327,7 +328,8 @@
           }
         }
       },
-      "End": true
+      "End": true,
+      "MaxConcurrency": 1
     }
   },
   "QueryLanguage": "JSONata"
