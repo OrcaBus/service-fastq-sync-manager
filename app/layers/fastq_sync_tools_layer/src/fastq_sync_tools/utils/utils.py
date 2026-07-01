@@ -211,10 +211,16 @@ def run_fastq_unarchiving_job(fastq: Fastq) -> Optional[UnarchivingJob]:
 def check_fastq_against_requirements_list(
         fastq_obj: Fastq,
         requirements: List[REQUIREMENT],
-        is_unarchiving_allowed: bool = False
+        is_unarchiving_allowed: bool = False,
+        has_active_readset_context: Optional[Dict[str, str]] = None
 ) -> Tuple[List[REQUIREMENT], List[REQUIREMENT]]:
     """
-    Given a fastq list row and the requirements, split requirements into two lists, one that is satisfied and one that is not
+    Given a fastq list row and the requirements, split requirements into two lists, one that is satisfied and one that is not.
+
+    When has_active_readset_context is provided (dict with 'bucket' and 'prefix'), the hasActiveReadSet
+    requirement is evaluated context-aware: the readset must exist in the specified bucket/prefix.
+    If not in context and the context is not allowed, raises ContextNotEligibleError.
+    If not in context and the context IS allowed, reports as unsatisfied (downstream handles unarchiving).
     """
 
     satisfied_requirements = []
@@ -225,19 +231,45 @@ def check_fastq_against_requirements_list(
     if (
             not is_unarchiving_allowed
             and 'hasActiveReadSet' in requirements
-            and (not has_active_readset(fastq_obj))
             and fastq_obj['readSet'] is not None
     ):
-        raise ValueError("Fastq object is archived but unarchiving is not specified in the fastq sync service")
+        if has_active_readset_context is not None:
+            # Context-aware archived check
+            bucket = has_active_readset_context['bucket']
+            prefix = has_active_readset_context['prefix']
+            if not has_active_readset_in_context(fastq_obj, bucket, prefix):
+                if not is_allowed_context(bucket, prefix):
+                    raise ContextNotEligibleError(bucket, prefix)
+                # If allowed context but not in context, this is an archived/unavailable scenario
+                # but unarchiving is not allowed — raise the same ValueError as before
+                raise ValueError("Fastq object is archived but unarchiving is not specified in the fastq sync service")
+        else:
+            # Original behavior: context-free check
+            if not has_active_readset(fastq_obj):
+                raise ValueError("Fastq object is archived but unarchiving is not specified in the fastq sync service")
 
     # Just a large if else block to check the requirements
     for requirement_iter_ in requirements:
         # Check read set
         if requirement_iter_ == 'hasActiveReadSet':
-            if has_active_readset(fastq_obj):
-                satisfied_requirements.append(requirement_iter_)
+            if has_active_readset_context is not None:
+                # Context-aware evaluation
+                bucket = has_active_readset_context['bucket']
+                prefix = has_active_readset_context['prefix']
+                if has_active_readset_in_context(fastq_obj, bucket, prefix):
+                    satisfied_requirements.append(requirement_iter_)
+                else:
+                    # Not in context — check if context is allowed
+                    if not is_allowed_context(bucket, prefix):
+                        raise ContextNotEligibleError(bucket, prefix)
+                    # Allowed context but not in context: report as unsatisfied
+                    unsatisfied_requirements.append(requirement_iter_)
             else:
-                unsatisfied_requirements.append(requirement_iter_)
+                # Original context-free evaluation
+                if has_active_readset(fastq_obj):
+                    satisfied_requirements.append(requirement_iter_)
+                else:
+                    unsatisfied_requirements.append(requirement_iter_)
 
         # Check qc
         if requirement_iter_ == 'hasQc':
@@ -275,6 +307,7 @@ def check_fastq_list_against_requirements_list(
         fastq_list: List[Fastq],
         requirements: List[REQUIREMENT],
         is_unarchiving_allowed: bool = False,
+        has_active_readset_context: Optional[Dict[str, str]] = None,
 ) -> Tuple[List[REQUIREMENT], List[REQUIREMENT]]:
     """
     Given a list of fastqs and the requirements,
@@ -291,7 +324,8 @@ def check_fastq_list_against_requirements_list(
         satisfied_requirements_iter_, unsatisfied_requirements_iter_ = check_fastq_against_requirements_list(
             fastq_obj,
             requirements,
-            is_unarchiving_allowed
+            is_unarchiving_allowed,
+            has_active_readset_context=has_active_readset_context
         )
 
         # If there are no unsatisfied requirements, continue to the next fastq object
