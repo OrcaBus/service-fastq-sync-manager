@@ -88,6 +88,18 @@ function buildLambda(scope: Construct, props: LambdaProps): LambdaObject {
     );
   }
 
+  // Add pipeline cache environment variables for context-aware lambdas
+  if (
+    [
+      'checkFastqIdListAgainstRequirements',
+      'getFastqAndRemainingRequirements',
+      'launchRequirementJob',
+    ].includes(props.lambdaName)
+  ) {
+    lambdaFunction.addEnvironment('PIPELINE_CACHE_BUCKET', props.pipelineCacheBucket);
+    lambdaFunction.addEnvironment('PIPELINE_CACHE_PREFIX', props.pipelineCachePrefix);
+  }
+
   // Needs Callback Permissions
   if (lambdaRequirements.needsCallbackPermissions) {
     // Grant write permissions to allow the lambda to unlock durable executions

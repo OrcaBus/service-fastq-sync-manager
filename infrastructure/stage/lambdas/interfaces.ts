@@ -70,6 +70,8 @@ export interface BuildAllLambdaProps {
   fastqSyncLayer: LayerVersion;
   sqsQueue: IQueue;
   initialiseTaskTokenForFastqIdListSfnName: StepFunctionsName;
+  pipelineCacheBucket: string;
+  pipelineCachePrefix: string;
 }
 
 export interface LambdaProps extends BuildAllLambdaProps {

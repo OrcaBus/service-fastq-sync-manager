@@ -42,6 +42,8 @@ export class StatelessApplicationStack extends cdk.Stack {
       fastqSyncLayer: fastqSyncToolsLayer,
       sqsQueue: sqsQueue,
       initialiseTaskTokenForFastqIdListSfnName: 'initialiseTaskTokenForFastqIdList',
+      pipelineCacheBucket: props.pipelineCacheBucket,
+      pipelineCachePrefix: props.pipelineCachePrefix,
     });
 
     // Build the state machines
