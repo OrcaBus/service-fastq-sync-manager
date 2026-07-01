@@ -31,7 +31,18 @@
               "type": "object",
               "properties": {
                 "hasActiveReadSet": {
-                  "type": "boolean"
+                  "oneOf": [
+                    { "type": "boolean" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "bucket": { "type": "string", "minLength": 1, "maxLength": 63 },
+                        "prefix": { "type": "string", "minLength": 1, "maxLength": 1024 }
+                      },
+                      "required": ["bucket", "prefix"],
+                      "additionalProperties": false
+                    }
+                  ]
                 },
                 "hasQc": {
                   "type": "boolean"
