@@ -242,7 +242,10 @@ def check_fastq_against_requirements_list(
                     raise ContextNotEligibleError(bucket, prefix)
                 # If allowed context but not in context, this is an archived/unavailable scenario
                 # but unarchiving is not allowed — raise the same ValueError as before
-                raise ValueError("Fastq object is archived but unarchiving is not specified in the fastq sync service")
+                raise ValueError(
+                    f"Fastq readset is not available in requested context "
+                    f"(bucket={bucket}, prefix={prefix}) and unarchiving is not allowed"
+                )
         else:
             # Original behavior: context-free check
             if not has_active_readset(fastq_obj):
