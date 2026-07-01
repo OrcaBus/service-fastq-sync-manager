@@ -60,15 +60,10 @@ def has_active_readset(fastq_obj: Fastq) -> bool:
 
 def has_active_readset_in_context(fastq_obj: Fastq, bucket: str, prefix: str) -> bool:
     """
-    Check if all non-null ReadSet objects for a FASTQ reside in the given bucket
-    with keys starting with the given prefix AND are in active storage.
+    Check whether the FASTQ readset is resolvable in the provided (bucket, prefix) context.
 
-    Returns True if every non-null ReadSet object (r1, r2) has:
-    - storageClass in ACTIVE_STORAGE_CLASSES
-    - bucket equals the given bucket
-    - key starts with the given prefix
-
-    Returns False if readSet is None or no non-null ReadSet objects exist.
+    This implementation delegates the validation to `orcabus_api_tools.fastq.to_fastq_list_row(...)`:
+    it returns True if that call succeeds, and False if it raises an HTTPError.
     """
     if fastq_obj['readSet'] is None:
         return False
