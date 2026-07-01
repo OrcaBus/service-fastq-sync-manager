@@ -6,3 +6,8 @@ minimumReleaseAgeExclude:
   - '@aws-cdk/aws-pipes-sources-alpha@2.256.1-alpha.0'
   - aws-cdk-lib@2.256.1
   - aws-cdk@2.1124.1
+  - js-yaml@4.1.2
+  - '@babel/core@7.29.1'
+overrides:
+  '@babel/core@<=7.29.0': ^7.29.1
+  js-yaml@<=4.1.1: ^4.1.2
