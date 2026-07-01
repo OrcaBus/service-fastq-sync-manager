@@ -10,6 +10,7 @@
         "fastqIdList": "{% $states.input.payload.fastqIdList %}",
         "requirements": "{% $states.input.payload.requirements %}",
         "isUnarchivingAllowed": "{% $states.input.payload.forceUnarchiving ? true : false %}",
+        "hasActiveReadSetContext": "{% $type($states.input.payload.requirements.hasActiveReadSet) = 'object' ? $states.input.payload.requirements.hasActiveReadSet : null %}",
         "callbackId": "{% $states.input.callbackId %}",
         "dynamoDbTableName": "${__dynamodb_table_name__}",
         "dynamoDbIdTypeKeys": {
@@ -64,7 +65,7 @@
       "Type": "Task",
       "Arguments": {
         "TaskToken": "{% $taskToken %}",
-        "Error": "FastqArchivedError",
+        "Error": "{% $parse($states.input.error.Cause).errorType ? $parse($states.input.error.Cause).errorType : 'FastqArchivedError' %}",
         "Cause": "{% $parse($states.input.error.Cause).errorMessage %}"
       },
       "Resource": "arn:aws:states:::aws-sdk:sfn:sendTaskFailure",
@@ -293,7 +294,8 @@
               "Input": {
                 "fastqId": "{% $states.input.fastqIdMapIter %}",
                 "requirements": "{% $states.input.requirementsListMapIter %}",
-                "isUnarchivingAllowed": "{% $isUnarchivingAllowed %}"
+                "isUnarchivingAllowed": "{% $isUnarchivingAllowed %}",
+                "hasActiveReadSetContext": "{% $hasActiveReadSetContext %}"
               }
             },
             "End": true

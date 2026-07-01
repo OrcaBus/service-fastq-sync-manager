@@ -8,7 +8,8 @@
       "Assign": {
         "fastqId": "{% $states.input.fastqId %}",
         "requirements": "{% $states.input.requirements %}",
-        "isUnarchivingAllowed": "{% $states.input.isUnarchivingAllowed ? $states.input.isUnarchivingAllowed : false %}"
+        "isUnarchivingAllowed": "{% $states.input.isUnarchivingAllowed ? $states.input.isUnarchivingAllowed : false %}",
+        "hasActiveReadSetContext": "{% $states.input.hasActiveReadSetContext ? $states.input.hasActiveReadSetContext : null %}"
       }
     },
     "Get fastq list row and remaining requirements": {
@@ -19,7 +20,8 @@
         "Payload": {
           "fastqId": "{% $fastqId %}",
           "requirements": "{% $requirements %}",
-          "isUnarchivingAllowed": "{% $isUnarchivingAllowed %}"
+          "isUnarchivingAllowed": "{% $isUnarchivingAllowed %}",
+          "hasActiveReadSetContext": "{% $hasActiveReadSetContext %}"
         }
       },
       "Retry": [
@@ -311,7 +313,9 @@
         "FunctionName": "${__launch_requirement_job_lambda_function_arn__}",
         "Payload": {
           "fastqId": "{% $fastqId %}",
-          "requirementType": "hasActiveReadSet"
+          "requirementType": "hasActiveReadSet",
+          "targetBucket": "{% $hasActiveReadSetContext ? $hasActiveReadSetContext.bucket : null %}",
+          "targetPrefix": "{% $hasActiveReadSetContext ? $hasActiveReadSetContext.prefix : null %}"
         }
       },
       "Retry": [
