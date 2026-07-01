@@ -64,5 +64,5 @@ pnpm cdk-stateless ls
 
 - **Jest** (v30) + **ts-jest** — Unit tests for CDK constructs
 - **cdk-nag** — Compliance tests in `./test`
-- **pytest** — Python unit tests (colocated with lambdas)
-- GitHub Actions CI runs `make check` and `make test` on PRs
+- **pytest** — Python testing framework (not currently used in this repository)
+- GitHub Actions CI runs `make check` and `pnpm test` on PRs
