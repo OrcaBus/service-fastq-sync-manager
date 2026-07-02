@@ -26,4 +26,8 @@ export interface StatelessApplicationConfig {
   // Pipeline cache configuration
   pipelineCacheBucket: string;
   pipelineCachePrefix: string;
+
+  // Test data configuration
+  testDataBucket: string;
+  testDataPrefix: string;
 }
