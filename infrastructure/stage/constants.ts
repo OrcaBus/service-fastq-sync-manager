@@ -37,5 +37,5 @@ export const DEFAULT_MAX_FASTQ_SYNC_REQUEST_CONCURRENCY = 20;
 export const STACK_PREFIX = 'fastq-sync';
 
 // Test data exemptions for read set context
-export const TEST_DATA_BUCKET = 'test-data-503977275616-ap-southeast-2'
+export const TEST_DATA_BUCKET = 'test-data-503977275616-ap-southeast-2';
 export const TEST_DATA_PREFIX = 'testdata/';

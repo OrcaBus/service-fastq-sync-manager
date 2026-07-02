@@ -278,7 +278,7 @@
       "Items": "{% $fastqIdList %}",
       "ItemSelector": {
         "fastqIdMapIter": "{% $states.context.Map.Item.Value %}",
-        "requirementsListMapIter": "{% /* https://try.jsonata.org/slAM0Vym- */ [$keys($sift($requirements, function($v){$v = true}))] %}"
+        "requirementsListMapIter": "{% /* https://try.jsonata.org/slAM0Vym- */ [$keys($sift($requirements, function($v){$v}))] %}"
       },
       "ItemProcessor": {
         "ProcessorConfig": {
