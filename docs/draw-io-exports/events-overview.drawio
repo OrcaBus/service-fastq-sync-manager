@@ -1,0 +1,173 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="events-overview" id="events-overview">
+    <mxGraphModel dx="1200" dy="900" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- ═══════════════ External callers (left) ═══════════════ -->
+
+        <!-- External SFN -->
+        <mxCell id="n1" value="&lt;b&gt;External Step Function&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:11px;color:#555555;&quot;&gt;caller with task token&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;strokeWidth=2;fontSize=13;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="25" y="30" width="220" height="62" as="geometry"/>
+        </mxCell>
+
+        <!-- ═══════════════ Event Bus (centre top) ═══════════════ -->
+
+        <!-- EventBridge -->
+        <mxCell id="n2" value="&lt;b&gt;OrcaBusMain EventBridge&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;fontSize=13;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="300" y="30" width="300" height="46" as="geometry"/>
+        </mxCell>
+
+        <!-- ═══════════════ External services (right) ═══════════════ -->
+
+        <!-- Fastq Manager -->
+        <mxCell id="n3" value="&lt;b&gt;Fastq Manager&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:11px;color:#555555;&quot;&gt;orcabus.fastqmanager&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;strokeWidth=2;fontSize=13;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="660" y="120" width="220" height="62" as="geometry"/>
+        </mxCell>
+
+        <!-- Fastq Unarchiving -->
+        <mxCell id="n4" value="&lt;b&gt;Fastq Unarchiving&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:11px;color:#555555;&quot;&gt;orcabus.fastqunarchiving&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;strokeWidth=2;fontSize=13;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="660" y="210" width="220" height="62" as="geometry"/>
+        </mxCell>
+
+        <!-- ═══════════════ Service internals ═══════════════ -->
+
+        <!-- Service boundary -->
+        <mxCell id="n20" value="Fastq Sync Manager" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#1a1a1a;strokeWidth=2;dashed=1;dashPattern=8 4;fontSize=14;fontStyle=1;fontColor=#1a1a1a;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="25" y="120" width="590" height="530" as="geometry"/>
+        </mxCell>
+
+        <!-- SFN: Send request to queue -->
+        <mxCell id="n5" value="&lt;b&gt;Send Fastq Sync Request to Queue&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:11px;color:#555555;&quot;&gt;Step Function&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=13;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="55" y="170" width="260" height="62" as="geometry"/>
+        </mxCell>
+
+        <!-- SQS Queue -->
+        <mxCell id="n6" value="&lt;b&gt;SQS Queue&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:11px;color:#555555;&quot;&gt;throttled requests&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;strokeWidth=2;fontSize=13;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="55" y="270" width="260" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- Lambda: Handle Messages -->
+        <mxCell id="n7" value="&lt;b&gt;Handle Messages Lambda&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:11px;color:#555555;&quot;&gt;durable execution + callback&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=13;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="55" y="358" width="260" height="62" as="geometry"/>
+        </mxCell>
+
+        <!-- SFN: Initialise task token -->
+        <mxCell id="n8" value="&lt;b&gt;Initialise Task Token&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:11px;color:#555555;&quot;&gt;Step Function&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=13;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="55" y="458" width="260" height="62" as="geometry"/>
+        </mxCell>
+
+        <!-- DynamoDB -->
+        <mxCell id="n9" value="&lt;b&gt;DynamoDB&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:11px;color:#555555;&quot;&gt;task token + fastq ID store&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;strokeWidth=2;fontSize=13;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="380" y="458" width="210" height="62" as="geometry"/>
+        </mxCell>
+
+        <!-- SFN: Launch requirements -->
+        <mxCell id="n10" value="&lt;b&gt;Launch Fastq List Row Requirements&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:11px;color:#555555;&quot;&gt;Step Function — per fastq ID&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=13;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="55" y="558" width="260" height="62" as="geometry"/>
+        </mxCell>
+
+        <!-- SFN: Fastq ID updated -->
+        <mxCell id="n11" value="&lt;b&gt;Fastq ID Updated&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:11px;color:#555555;&quot;&gt;Step Function — event driven&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=13;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="380" y="320" width="210" height="62" as="geometry"/>
+        </mxCell>
+
+        <!-- Heartbeat Scheduler -->
+        <mxCell id="n12" value="&lt;b&gt;Heartbeat Monitor&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:11px;color:#555555;&quot;&gt;scheduled every 15 min&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=13;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="380" y="558" width="210" height="62" as="geometry"/>
+        </mxCell>
+
+        <!-- ═══════════════ EDGES ═══════════════ -->
+
+        <!-- External SFN → EventBridge (FastqSync event) -->
+        <mxCell id="e1" value="FastqSync event" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;fontSize=10;fontColor=#888888;fontStyle=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="n1" target="n2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- EventBridge → Send request to queue -->
+        <mxCell id="e2" value="FastqSync" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;fontSize=10;fontColor=#888888;fontStyle=2;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="n2" target="n5" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- EventBridge → Fastq ID Updated (FastqStateChange) -->
+        <mxCell id="e3" value="FastqStateChange" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;fontSize=10;fontColor=#888888;fontStyle=2;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="n2" target="n11" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Fastq Manager → EventBridge -->
+        <mxCell id="e4" value="FastqStateChange" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;fontSize=10;fontColor=#888888;fontStyle=2;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="n3" target="n2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Fastq Unarchiving → EventBridge -->
+        <mxCell id="e5" value="UnarchivingStateChange" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;fontSize=10;fontColor=#888888;fontStyle=2;exitX=0;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=1;entryDx=0;entryDy=0;" edge="1" source="n4" target="n2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Send request → SQS -->
+        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="n5" target="n6" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- SQS → Handle Messages Lambda -->
+        <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="n6" target="n7" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Handle Messages → Initialise task token -->
+        <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="n7" target="n8" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Initialise task token → DynamoDB -->
+        <mxCell id="e9" value="register" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;fontSize=10;fontColor=#888888;fontStyle=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="n8" target="n9" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Initialise task token → Launch requirements -->
+        <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="n8" target="n10" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Launch requirements → Fastq Manager (kick off jobs) -->
+        <mxCell id="e11" value="launch jobs" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;fontSize=10;fontColor=#888888;fontStyle=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=1;entryDx=0;entryDy=0;" edge="1" source="n10" target="n3" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="640" y="589"/>
+              <mxPoint x="640" y="182"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Fastq ID Updated → DynamoDB -->
+        <mxCell id="e12" value="lookup + release" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;fontSize=10;fontColor=#888888;fontStyle=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="n11" target="n9" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Heartbeat → DynamoDB -->
+        <mxCell id="e14" value="scan + heartbeat" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;fontSize=10;fontColor=#888888;fontStyle=2;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="n12" target="n9" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="485" y="540"/>
+              <mxPoint x="610" y="540"/>
+              <mxPoint x="610" y="489"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Fastq ID Updated → External SFN (sendTaskSuccess) -->
+        <mxCell id="e13" value="sendTaskSuccess" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#82b366;strokeWidth=2;fontSize=10;fontColor=#888888;fontStyle=2;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" source="n11" target="n1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="40" y="351"/>
+              <mxPoint x="40" y="92"/>
+              <mxPoint x="135" y="92"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
