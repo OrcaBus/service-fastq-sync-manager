@@ -5,27 +5,27 @@ Bunch of useful helper functions for lambdas in the fastq sync service
 """
 
 # Standard library imports
-from typing import Optional, List, Tuple
+import os
+from typing import Dict, Optional, List, Tuple, Union
 import logging
+from requests import HTTPError
 
 # Layer imports
 from orcabus_api_tools.fastq import (
     get_fastq_jobs,
     run_qc_stats,
     run_file_compression_stats,
-    run_ntsm, run_read_count_stats
+    run_ntsm, run_read_count_stats,
+    to_fastq_list_row
 )
-
 from orcabus_api_tools.fastq.models import (
     Job, JobType,
     Fastq
 )
-
 from orcabus_api_tools.fastq_unarchiving import (
     create_job as create_unarchiving_job,
     get_job_list_for_fastq
 )
-
 from orcabus_api_tools.fastq_unarchiving.models import (
     Job as UnarchivingJob,
 )
@@ -36,10 +36,12 @@ from .globals import (
     ACTIVE_STORAGE_CLASSES
 )
 
+from .exceptions import ContextNotEligibleError
+
 logger = logging.getLogger(__name__)
 
 
-def has_active_readset(fastq_obj: 'Fastq') -> bool:
+def has_active_readset(fastq_obj: Fastq) -> bool:
     if fastq_obj['readSet'] is None:
         return False
 
@@ -53,6 +55,28 @@ def has_active_readset(fastq_obj: 'Fastq') -> bool:
         if readset_object['storageClass'] not in ACTIVE_STORAGE_CLASSES:
             return False
 
+    return True
+
+
+def has_active_readset_in_context(fastq_obj: Fastq, bucket: str, prefix: str) -> bool:
+    """
+    Check whether the FASTQ readset is resolvable in the provided (bucket, prefix) context.
+
+    This implementation delegates the validation to `orcabus_api_tools.fastq.to_fastq_list_row(...)`:
+    it returns True if that call succeeds, and False if it raises an HTTPError.
+    """
+    if fastq_obj['readSet'] is None:
+        return False
+
+    # Try running to_fastq_list_row with the bucket and prefix context
+    try:
+        to_fastq_list_row(
+            fastq_id=fastq_obj['id'],
+            bucket=bucket,
+            key_prefix=prefix,
+        )
+    except HTTPError:
+        return False
     return True
 
 
@@ -182,10 +206,16 @@ def run_fastq_unarchiving_job(fastq: Fastq) -> Optional[UnarchivingJob]:
 def check_fastq_against_requirements_list(
         fastq_obj: Fastq,
         requirements: List[REQUIREMENT],
-        is_unarchiving_allowed: bool = False
+        is_unarchiving_allowed: bool = False,
+        has_active_readset_context: Optional[Dict[str, str]] = None
 ) -> Tuple[List[REQUIREMENT], List[REQUIREMENT]]:
     """
-    Given a fastq list row and the requirements, split requirements into two lists, one that is satisfied and one that is not
+    Given a fastq list row and the requirements, split requirements into two lists, one that is satisfied and one that is not.
+
+    When has_active_readset_context is provided (dict with 'bucket' and 'prefix'), the hasActiveReadSet
+    requirement is evaluated context-aware: the readset must exist in the specified bucket/prefix.
+    If not in context and the context is not allowed, raises ContextNotEligibleError.
+    If not in context and the context IS allowed, reports as unsatisfied (downstream handles unarchiving).
     """
 
     satisfied_requirements = []
@@ -196,19 +226,48 @@ def check_fastq_against_requirements_list(
     if (
             not is_unarchiving_allowed
             and 'hasActiveReadSet' in requirements
-            and (not has_active_readset(fastq_obj))
             and fastq_obj['readSet'] is not None
     ):
-        raise ValueError("Fastq object is archived but unarchiving is not specified in the fastq sync service")
+        if has_active_readset_context is not None:
+            # Context-aware archived check
+            bucket = has_active_readset_context['bucket']
+            prefix = has_active_readset_context['prefix']
+            if not has_active_readset_in_context(fastq_obj, bucket, prefix):
+                if not is_allowed_context(bucket, prefix):
+                    raise ContextNotEligibleError(bucket, prefix)
+                # If allowed context but not in context, this is an archived/unavailable scenario
+                # but unarchiving is not allowed — raise the same ValueError as before
+                raise ValueError(
+                    f"Fastq readset is not available in requested context "
+                    f"(bucket={bucket}, prefix={prefix}) and unarchiving is not allowed"
+                )
+        else:
+            # Original behavior: context-free check
+            if not has_active_readset(fastq_obj):
+                raise ValueError("Fastq object is archived but unarchiving is not specified in the fastq sync service")
 
     # Just a large if else block to check the requirements
     for requirement_iter_ in requirements:
         # Check read set
         if requirement_iter_ == 'hasActiveReadSet':
-            if has_active_readset(fastq_obj):
-                satisfied_requirements.append(requirement_iter_)
+            if has_active_readset_context is not None:
+                # Context-aware evaluation
+                bucket = has_active_readset_context['bucket']
+                prefix = has_active_readset_context['prefix']
+                if has_active_readset_in_context(fastq_obj, bucket, prefix):
+                    satisfied_requirements.append(requirement_iter_)
+                else:
+                    # Not in context — check if context is allowed
+                    if not is_allowed_context(bucket, prefix):
+                        raise ContextNotEligibleError(bucket, prefix)
+                    # Allowed context but not in context: report as unsatisfied
+                    unsatisfied_requirements.append(requirement_iter_)
             else:
-                unsatisfied_requirements.append(requirement_iter_)
+                # Original context-free evaluation
+                if has_active_readset(fastq_obj):
+                    satisfied_requirements.append(requirement_iter_)
+                else:
+                    unsatisfied_requirements.append(requirement_iter_)
 
         # Check qc
         if requirement_iter_ == 'hasQc':
@@ -246,6 +305,7 @@ def check_fastq_list_against_requirements_list(
         fastq_list: List[Fastq],
         requirements: List[REQUIREMENT],
         is_unarchiving_allowed: bool = False,
+        has_active_readset_context: Optional[Dict[str, str]] = None,
 ) -> Tuple[List[REQUIREMENT], List[REQUIREMENT]]:
     """
     Given a list of fastqs and the requirements,
@@ -262,7 +322,8 @@ def check_fastq_list_against_requirements_list(
         satisfied_requirements_iter_, unsatisfied_requirements_iter_ = check_fastq_against_requirements_list(
             fastq_obj,
             requirements,
-            is_unarchiving_allowed
+            is_unarchiving_allowed,
+            has_active_readset_context=has_active_readset_context
         )
 
         # If there are no unsatisfied requirements, continue to the next fastq object
@@ -282,3 +343,126 @@ def check_fastq_list_against_requirements_list(
     unsatisfied_requirements = list(set(requirements) - satisfied_requirements)
 
     return list(satisfied_requirements), unsatisfied_requirements
+
+
+def get_pipeline_cache_config() -> Tuple[str, str]:
+    """
+    Read and validate PIPELINE_CACHE_BUCKET and PIPELINE_CACHE_PREFIX from environment.
+    Returns (pipeline_cache_bucket, byob_environment).
+    Raises RuntimeError if either is missing or empty.
+    """
+    pipeline_cache_bucket = os.environ.get("PIPELINE_CACHE_BUCKET", "")
+    byob_environment = os.environ.get("PIPELINE_CACHE_PREFIX", "")
+
+    if not pipeline_cache_bucket:
+        raise RuntimeError("Missing required environment variable: PIPELINE_CACHE_BUCKET")
+    if not byob_environment:
+        raise RuntimeError("Missing required environment variable: PIPELINE_CACHE_PREFIX")
+
+    return pipeline_cache_bucket, byob_environment
+
+
+def validate_has_active_readset_input(
+        has_active_readset_value: Union[bool, dict]
+) -> Tuple[bool, Optional[str], Optional[str]]:
+    """
+    Validate and normalize hasActiveReadSet input.
+
+    Args:
+        has_active_readset_value: Either a boolean or a dict with 'bucket' and 'prefix'.
+
+    Returns:
+        Tuple of (is_context_aware, bucket_or_none, prefix_or_none).
+        - For boolean True: (False, None, None) — context-free check
+        - For dict: (True, bucket, prefix) — context-aware check
+
+    Raises:
+        ValueError: If input is boolean False (should be excluded by caller),
+                    or if dict has missing/empty/invalid bucket or prefix,
+                    or if input is neither bool nor dict.
+    """
+    # Handle boolean input
+    if isinstance(has_active_readset_value, bool):
+        if has_active_readset_value:
+            return (False, None, None)
+        else:
+            raise ValueError(
+                "hasActiveReadSet value is False; "
+                "this requirement should be excluded from the requirements list"
+            )
+
+    # Handle dict input
+    if isinstance(has_active_readset_value, dict):
+        # Check 'bucket' key exists
+        if 'bucket' not in has_active_readset_value:
+            raise ValueError(
+                "hasActiveReadSet object is missing required attribute: 'bucket'"
+            )
+
+        # Check 'prefix' key exists
+        if 'prefix' not in has_active_readset_value:
+            raise ValueError(
+                "hasActiveReadSet object is missing required attribute: 'prefix'"
+            )
+
+        bucket = has_active_readset_value['bucket']
+        prefix = has_active_readset_value['prefix']
+
+        # Validate bucket is a string
+        if not isinstance(bucket, str):
+            raise ValueError("hasActiveReadSet 'bucket' must be a string")
+
+        # Validate prefix is a string
+        if not isinstance(prefix, str):
+            raise ValueError("hasActiveReadSet 'prefix' must be a string")
+
+        # Check bucket is non-empty after strip
+        if not bucket.strip():
+            raise ValueError(
+                "hasActiveReadSet 'bucket' must not be empty or whitespace-only"
+            )
+
+        # Check prefix is non-empty after strip
+        if not prefix.strip():
+            raise ValueError(
+                "hasActiveReadSet 'prefix' must not be empty or whitespace-only"
+            )
+
+        # Check bucket length (1-63)
+        if len(bucket) > 63:
+            raise ValueError(
+                f"hasActiveReadSet 'bucket' exceeds maximum length of 63 characters "
+                f"(got {len(bucket)})"
+            )
+
+        # Check prefix length (1-1024)
+        if len(prefix) > 1024:
+            raise ValueError(
+                f"hasActiveReadSet 'prefix' exceeds maximum length of 1024 characters "
+                f"(got {len(prefix)})"
+            )
+
+        return (True, bucket, prefix)
+
+    # Neither bool nor dict
+    raise ValueError(
+        f"hasActiveReadSet must be a boolean or an object with 'bucket' and 'prefix', "
+        f"got {type(has_active_readset_value).__name__}"
+    )
+
+
+def is_allowed_context(bucket: str, prefix: str) -> bool:
+    """
+    Check if the given bucket and prefix match the allowed pipeline-cache context.
+
+    Returns True if bucket equals PIPELINE_CACHE_BUCKET env var AND
+    prefix starts with '{PIPELINE_CACHE_PREFIX}'.
+
+    Uses get_pipeline_cache_config() internally to read environment variables.
+    """
+    pipeline_cache_bucket, pipeline_cache_prefix = get_pipeline_cache_config()
+
+    return (
+        bucket == pipeline_cache_bucket
+        and prefix.startswith(pipeline_cache_prefix)
+    )

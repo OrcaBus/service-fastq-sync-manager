@@ -22,4 +22,8 @@ export interface StatelessApplicationConfig {
 
   // Sqs stuff
   sqsQueueName: string;
+
+  // Pipeline cache configuration
+  pipelineCacheBucket: string;
+  pipelineCachePrefix: string;
 }

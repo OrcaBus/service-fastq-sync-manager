@@ -5,21 +5,27 @@ Check fastq id list against the requirements
 
 Takes in the inputs:
   * fastqIdList: list of fastq ids
-  * requirements: list of requirements to check against
+  * requirements: dict of requirement names to boolean or context object values
   * isUnarchivingAllowed: boolean indicating if unarchiving is allowed
 
 And outputs the following:
 
 * hasAllRequirements: boolean
+* fastqIdListWithMissingRequirements: list of fastq ids that are missing requirements
 
 """
-from typing import List
 
+# Standard imports
+from typing import Dict, List, Optional, Union, cast
 from requests import HTTPError
 
+# Layer imports
 from orcabus_api_tools.fastq import get_fastq
-from fastq_sync_tools import check_fastq_list_against_requirements_list
-from fastq_sync_tools.utils.globals import REQUIREMENT
+from fastq_sync_tools import (
+    check_fastq_list_against_requirements_list,
+    validate_has_active_readset_input,
+    REQUIREMENT,
+)
 
 
 def handler(event, context):
@@ -30,8 +36,51 @@ def handler(event, context):
     :return:
     """
     fastq_id_list: List[str] = event.get("fastqIdList", [])
-    requirements: List[REQUIREMENT] = event.get("requirements", [])
+    requirements: Union[List[REQUIREMENT], Dict[REQUIREMENT, Union[bool, Dict[str, str]]]] = event.get("requirements", None)
     is_unarchiving_allowed: bool = event.get("isUnarchivingAllowed", False)
+
+    # Requirements is a required field
+    if requirements is None:
+        raise ValueError("requirements is required")
+
+    # Check if requirements is a list, and turn it into a dict of objects if so
+    if isinstance(requirements, list):
+        requirements: Dict[REQUIREMENT, bool] = dict(map(
+            lambda req: (req, True),
+            requirements
+        ))
+
+    # Parse requirements dict into a List[REQUIREMENT] and extract context if present
+    requirements_list: List[REQUIREMENT] = []
+    has_active_readset_context: Optional[Dict[str, str]] = None
+
+    for req_name, req_value in requirements.items():
+        if req_name == "hasActiveReadSet":
+            # Include only when enabled (True or context object)
+            if isinstance(req_value, bool) and not req_value:
+                continue
+
+            # Validate and parse hasActiveReadSet value
+            try:
+                is_context_aware, bucket, prefix = validate_has_active_readset_input(req_value)
+            except ValueError as e:
+                raise ValueError(
+                    f"Invalid hasActiveReadSet requirement value: {e}"
+                ) from e
+
+            # Include hasActiveReadSet in the requirements list
+            requirements_list.append("hasActiveReadSet")
+
+            # If context-aware, extract the context object
+            if is_context_aware:
+                has_active_readset_context = {
+                    "bucket": cast(str, bucket),
+                    "prefix": cast(str, prefix),
+                }
+        else:
+            # For other requirements, include if value is truthy
+            if req_value:
+                requirements_list.append(cast(REQUIREMENT, req_name))
 
     # Get fastqs
     try:
@@ -46,10 +95,12 @@ def handler(event, context):
             "hasAllRequirements": False,
         }
 
+    # Check requirements for the full list — ContextNotEligibleError propagates
     satisfied_requirements, unsatisfied_requirements = check_fastq_list_against_requirements_list(
         fastq_list=fastq_obj_list,
-        requirements=requirements,
-        is_unarchiving_allowed=is_unarchiving_allowed
+        requirements=requirements_list,
+        is_unarchiving_allowed=is_unarchiving_allowed,
+        has_active_readset_context=has_active_readset_context,
     )
 
     fastq_id_list_with_missing_requirements = []
@@ -58,8 +109,9 @@ def handler(event, context):
         for fastq_obj_iter in fastq_obj_list:
             satisfied_requirements_iter, unsatisfied_requirements_iter = check_fastq_list_against_requirements_list(
                 fastq_list=[fastq_obj_iter],
-                requirements=requirements,
-                is_unarchiving_allowed=is_unarchiving_allowed
+                requirements=requirements_list,
+                is_unarchiving_allowed=is_unarchiving_allowed,
+                has_active_readset_context=has_active_readset_context,
             )
             if len(unsatisfied_requirements_iter) > 0:
                 fastq_id_list_with_missing_requirements.append(fastq_obj_iter['id'])
