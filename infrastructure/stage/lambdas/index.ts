@@ -98,6 +98,9 @@ function buildLambda(scope: Construct, props: LambdaProps): LambdaObject {
   ) {
     lambdaFunction.addEnvironment('PIPELINE_CACHE_BUCKET', props.pipelineCacheBucket);
     lambdaFunction.addEnvironment('PIPELINE_CACHE_PREFIX', props.pipelineCachePrefix);
+
+    lambdaFunction.addEnvironment('TEST_DATA_BUCKET', props.testDataBucket);
+    lambdaFunction.addEnvironment('TEST_DATA_PREFIX', props.testDataPrefix);
   }
 
   // Needs Callback Permissions
