@@ -72,6 +72,8 @@ export interface BuildAllLambdaProps {
   initialiseTaskTokenForFastqIdListSfnName: StepFunctionsName;
   pipelineCacheBucket: string;
   pipelineCachePrefix: string;
+  testDataBucket: string;
+  testDataPrefix: string;
 }
 
 export interface LambdaProps extends BuildAllLambdaProps {

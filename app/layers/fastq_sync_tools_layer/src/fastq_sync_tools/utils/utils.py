@@ -9,6 +9,7 @@ import os
 from typing import Dict, Optional, List, Tuple, Union
 import logging
 from requests import HTTPError
+from os import environ
 
 # Layer imports
 from orcabus_api_tools.fastq import (
@@ -35,6 +36,10 @@ from .globals import (
     REQUIREMENT,
     ACTIVE_STORAGE_CLASSES
 )
+
+# Import test data
+TEST_DATA_BUCKET_ENV_VAR = "TEST_DATA_BUCKET"
+TEST_DATA_PREFIX_ENV_VAR = "TEST_DATA_PREFIX"
 
 from .exceptions import ContextNotEligibleError
 
@@ -67,6 +72,18 @@ def has_active_readset_in_context(fastq_obj: Fastq, bucket: str, prefix: str) ->
     """
     if fastq_obj['readSet'] is None:
         return False
+
+    # Try running to_fastq_list_row with the test data bucket
+    # If this passes, we're exempt because this is accessible from all projects
+    try:
+        to_fastq_list_row(
+            fastq_id=fastq_obj['id'],
+            bucket=environ[TEST_DATA_BUCKET_ENV_VAR],
+            key_prefix=environ[TEST_DATA_PREFIX_ENV_VAR],
+        )
+        return True
+    except HTTPError:
+        pass
 
     # Try running to_fastq_list_row with the bucket and prefix context
     try:

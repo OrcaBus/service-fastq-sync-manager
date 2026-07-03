@@ -3,6 +3,8 @@ import {
   DEFAULT_SLACK_TOPIC_NAME,
   DEFAULT_SQS_QUEUE_NAME,
   FASTQ_SYNC_TASK_TOKEN_TABLE_NAME,
+  TEST_DATA_BUCKET,
+  TEST_DATA_PREFIX,
 } from './constants';
 import { EVENT_BUS_NAME } from '@orcabus/platform-cdk-constructs/shared-config/event-bridge';
 import { StageName } from '@orcabus/platform-cdk-constructs/shared-config/accounts';
@@ -44,5 +46,9 @@ export const getStatelessApplicationProps = (stage: StageName): StatelessApplica
     // Pipeline cache configuration
     pipelineCacheBucket: PIPELINE_CACHE_BUCKET[stage],
     pipelineCachePrefix: PIPELINE_CACHE_PREFIX[stage],
+
+    // Test data configuration
+    testDataBucket: TEST_DATA_BUCKET,
+    testDataPrefix: TEST_DATA_PREFIX,
   };
 };
