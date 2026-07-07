@@ -1,0 +1,88 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="launch-fastq-list-row-requirements" id="launch-fastq-list-row-requirements">
+    <mxGraphModel dx="1200" dy="900" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- ═══════════════ COLUMN A (x=25) ═══════════════ -->
+
+        <!-- Start oval -->
+        <mxCell id="n1" value="Start" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1a1a1a;strokeWidth=2;fontSize=13;fontStyle=1;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="147" y="30" width="56" height="36" as="geometry"/>
+        </mxCell>
+
+        <!-- Step: Get fastq and remaining requirements -->
+        <mxCell id="n2" value="&lt;b&gt;Get fastq and remaining requirements&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:11px;color:#555555;&quot;&gt;query API for current fastq state&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=13;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="25" y="110" width="300" height="62" as="geometry"/>
+        </mxCell>
+
+        <!-- Decision: Has readset? -->
+        <mxCell id="n3" value="Has readset?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;fontSize=13;fontStyle=1;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="55" y="220" width="240" height="62" as="geometry"/>
+        </mxCell>
+
+        <!-- Side-float: No readset -->
+        <mxCell id="n4" value="No readset — end" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;fontSize=13;fontStyle=1;fontColor=#1a1a1a;arcSize=50;" vertex="1" parent="1">
+          <mxGeometry x="400" y="228" width="200" height="46" as="geometry"/>
+        </mxCell>
+
+        <!-- Decision: Needs unarchiving? -->
+        <mxCell id="n5" value="Needs unarchiving?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;fontSize=13;fontStyle=1;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="55" y="330" width="240" height="62" as="geometry"/>
+        </mxCell>
+
+        <!-- Side-float: Launch unarchiving -->
+        <mxCell id="n6" value="&lt;b&gt;Launch unarchiving job&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=13;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="400" y="338" width="240" height="46" as="geometry"/>
+        </mxCell>
+
+        <!-- Step: Launch requirement jobs in parallel -->
+        <mxCell id="n7" value="&lt;b&gt;Launch requirement jobs&lt;/b&gt;&lt;br&gt;&lt;i style=&quot;font-size:11px;color:#555555;&quot;&gt;QC · fingerprint · compression · read count&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=13;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="25" y="440" width="300" height="62" as="geometry"/>
+        </mxCell>
+
+        <!-- Terminal: Success -->
+        <mxCell id="n8" value="Success" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;fontSize=13;fontStyle=1;fontColor=#1a1a1a;arcSize=50;" vertex="1" parent="1">
+          <mxGeometry x="75" y="550" width="200" height="46" as="geometry"/>
+        </mxCell>
+
+        <!-- Edge: Start → Get fastq -->
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="n1" target="n2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Edge: Get fastq → Has readset? -->
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="n2" target="n3" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Edge: Has readset? → No readset (no) -->
+        <mxCell id="e3" value="no" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#888888;strokeWidth=2;dashed=1;dashPattern=8 4;fontSize=10;fontColor=#888888;fontStyle=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="n3" target="n4" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Edge: Has readset? → Needs unarchiving? (yes) -->
+        <mxCell id="e4" value="yes" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;fontSize=10;fontColor=#888888;fontStyle=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="n3" target="n5" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Edge: Needs unarchiving? → Launch unarchiving (yes) -->
+        <mxCell id="e5" value="yes" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;fontSize=10;fontColor=#888888;fontStyle=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="n5" target="n6" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Edge: Needs unarchiving? → Launch requirements (no) -->
+        <mxCell id="e6" value="no" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;fontSize=10;fontColor=#888888;fontStyle=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="n5" target="n7" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Edge: Launch requirements → Success -->
+        <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#555555;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="n7" target="n8" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
