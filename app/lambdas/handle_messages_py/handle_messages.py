@@ -36,19 +36,43 @@ if typing.TYPE_CHECKING:
 
 # Globals
 INITIALISE_TASK_TOKEN_FOR_FASTQ_ID_LIST_SFN_ARN_ENV_VAR = "INITIALISE_TASK_TOKEN_FOR_FASTQ_ID_LIST_SFN_ARN"
+INITIALISE_TASK_TOKEN_FOR_FASTQ_SET_ID_SFN_ARN_ENV_VAR = "INITIALISE_TASK_TOKEN_FOR_FASTQ_SET_ID_SFN_ARN"
 
 
 def get_sfn_client() -> 'SFNClient':
     return boto3.client('stepfunctions')
 
 
+def _get_sfn_arn_env_var(sfn_input: Dict[str, Any]) -> str:
+    """
+    Determine the correct Step Function ARN environment variable based on the payload structure.
+
+    Routing logic:
+      - If 'fastqSet' field is present in the payload → use INITIALISE_TASK_TOKEN_FOR_FASTQ_SET_ID_SFN_ARN
+        (takes precedence even if 'fastqIdList' is also present)
+      - Else if 'fastqIdList' field is present in the payload → use INITIALISE_TASK_TOKEN_FOR_FASTQ_ID_LIST_SFN_ARN
+      - Else → raise ValueError indicating missing routing field
+    """
+    payload = sfn_input.get("payload", {})
+
+    if 'fastqSet' in payload:
+        return INITIALISE_TASK_TOKEN_FOR_FASTQ_SET_ID_SFN_ARN_ENV_VAR
+    elif 'fastqIdList' in payload:
+        return INITIALISE_TASK_TOKEN_FOR_FASTQ_ID_LIST_SFN_ARN_ENV_VAR
+    else:
+        raise ValueError("Missing routing field: payload must contain 'fastqSet' or 'fastqIdList'")
+
+
 def run_execution(sfn_input: Dict[str, Any], context: DurableContext) -> None:
+    # Determine the correct SFN ARN based on the payload routing fields
+    sfn_arn_env_var = _get_sfn_arn_env_var(sfn_input)
+
     # Define the wrapper function
     def submitter(callback_id: str, callback_context: WaitForCallbackContext):
         callback_context.logger.info("Submitting fastq sync request job")
         # Step 2: Launch the fastq sync job (asynchronously)
         sfn_object = get_sfn_client().start_execution(
-            stateMachineArn=environ[INITIALISE_TASK_TOKEN_FOR_FASTQ_ID_LIST_SFN_ARN_ENV_VAR],
+            stateMachineArn=environ[sfn_arn_env_var],
             input=json.dumps({
                 **sfn_input,
                 "callbackId": callback_id,
