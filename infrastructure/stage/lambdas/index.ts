@@ -86,6 +86,10 @@ function buildLambda(scope: Construct, props: LambdaProps): LambdaObject {
       'INITIALISE_TASK_TOKEN_FOR_FASTQ_ID_LIST_SFN_ARN',
       `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:stateMachine:${STACK_PREFIX}--${props.initialiseTaskTokenForFastqIdListSfnName}`
     );
+    lambdaFunction.addEnvironment(
+      'INITIALISE_TASK_TOKEN_FOR_FASTQ_SET_ID_SFN_ARN',
+      `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:stateMachine:${STACK_PREFIX}--${props.initialiseTaskTokenForFastqSetIdSfnName}`
+    );
   }
 
   // Add pipeline cache environment variables for context-aware lambdas
