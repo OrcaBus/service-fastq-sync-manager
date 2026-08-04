@@ -5,7 +5,7 @@
     "Get input vars": {
       "Type": "Pass",
       "Assign": {
-        "fastqSetId": "{% $states.input %}",
+        "fastqSetId": "{% $states.input.fastqSetId %}",
         "dynamoDbTableName": "${__dynamodb_table_name__}",
         "dynamoDbIdTypeKeys": {
           "fastqSetId": "FASTQ_SET_ID",
@@ -87,7 +87,7 @@
             "Arguments": {
               "FunctionName": "${__check_fastq_set_id_against_requirements_lambda_function_arn__}",
               "Payload": {
-                "fastqSetId": "{% [ $fastqSetId ] %}",
+                "fastqSetId": "{% $fastqSetId %}",
                 "requirements": "{% $requirementsSetMapIter %}"
               }
             },
@@ -305,7 +305,7 @@
       "Type": "Task",
       "Resource": "arn:aws:states:::states:startExecution.sync:2",
       "Arguments": {
-        "StateMachineArn": "${__launch_requirements_sfn_arn__}",
+        "StateMachineArn": "${__launch_fastq_set_requirements_sfn_arn__}",
         "Input": {
           "fastqSetId": "{% $fastqSetId %}",
           "requirements": "{% $requirementsSet %}"

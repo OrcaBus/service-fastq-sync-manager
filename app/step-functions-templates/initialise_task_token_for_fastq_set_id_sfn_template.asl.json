@@ -44,7 +44,7 @@
         }
       ],
       "Assign": {
-        "requirementsList": "{% [$keys($sift($requirements, function($v){$v}))] %}"
+        "requirementsList": "{% $keys($sift($requirements, function($v){$v})) %}"
       },
       "Output": {
         "hasAllRequirements": "{% $states.result.Payload.hasAllRequirements %}"
