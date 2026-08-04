@@ -32,7 +32,7 @@ def handler(event, context):
     :param context:
     :return:
     """
-    fastq_set_id: str = event.get("fastqSetId", [])
+    fastq_set_id: str = event.get("fastqSetId", None)
     requirements: List[FASTQ_SET_REQUIREMENT] = event.get("requirements", [])
     is_unarchiving_allowed: bool = event.get("isUnarchivingAllowed", False)
     wait_for_bam: bool = event.get("waitForBam", False)

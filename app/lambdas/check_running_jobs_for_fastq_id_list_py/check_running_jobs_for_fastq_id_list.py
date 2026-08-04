@@ -21,7 +21,7 @@ from orcabus_api_tools.workflow import list_workflow_runs, get_workflow_run
 # Fastq
 from orcabus_api_tools.fastq import (
     get_fastq_jobs as get_fastq_manager_jobs,
-    get_fastqn
+    get_fastq
 )
 # Fastq Unarchiving
 from orcabus_api_tools.fastq_unarchiving import (
