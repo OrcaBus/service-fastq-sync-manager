@@ -20,8 +20,7 @@ from requests import HTTPError
 
 from fastq_sync_tools.utils.utils import check_fastq_set_against_requirements_list
 # Layer imports
-from orcabus_api_tools.fastq import get_fastq, get_fastq_set
-from fastq_sync_tools import check_fastq_list_against_requirements_list
+from orcabus_api_tools.fastq import get_fastq_set
 from fastq_sync_tools.utils.globals import FASTQ_SET_REQUIREMENT
 
 
@@ -34,8 +33,6 @@ def handler(event, context):
     """
     fastq_set_id: str = event.get("fastqSetId", None)
     requirements: List[FASTQ_SET_REQUIREMENT] = event.get("requirements", [])
-    is_unarchiving_allowed: bool = event.get("isUnarchivingAllowed", False)
-    wait_for_bam: bool = event.get("waitForBam", False)
 
     # Get fastq set
     try:
