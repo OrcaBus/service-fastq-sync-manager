@@ -1,5 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+import { GitStack } from '@orcabus/platform-cdk-constructs/deployment-stack-pipeline';
 import { buildTaskTokenTable } from './dynamodb';
 import { StatefulApplicationConfig } from './interfaces';
 import { createMonitoredQueue, getTopicArnFromTopicName } from './sqs';
@@ -9,7 +10,7 @@ import { DEFAULT_QUEUE_TIMEOUT } from './constants';
 
 export type StatefulApplicationStackProps = cdk.StackProps & StatefulApplicationConfig;
 
-export class StatefulApplicationStack extends cdk.Stack {
+export class StatefulApplicationStack extends GitStack {
   constructor(scope: Construct, id: string, props: StatefulApplicationStackProps) {
     super(scope, id, props);
 

@@ -1,5 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+import { GitStack } from '@orcabus/platform-cdk-constructs/deployment-stack-pipeline';
 import { buildAllLambdas, buildFastqSyncToolsLayer } from './lambdas';
 import { buildAllStepFunctions } from './step-functions';
 import { StatelessApplicationConfig } from './interfaces';
@@ -13,7 +14,7 @@ import { IQueue } from 'aws-cdk-lib/aws-sqs';
 
 export type StatelessApplicationStackProps = cdk.StackProps & StatelessApplicationConfig;
 
-export class StatelessApplicationStack extends cdk.Stack {
+export class StatelessApplicationStack extends GitStack {
   constructor(scope: Construct, id: string, props: StatelessApplicationStackProps) {
     super(scope, id, props);
 
