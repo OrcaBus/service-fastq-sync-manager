@@ -12,9 +12,11 @@ export const FASTQ_SYNC_TASK_TOKEN_TABLE_NAME = 'FastqSyncTaskTokenTable';
 
 // Event constants
 export const FASTQ_SYNC_EVENT_DETAIL_TYPE = 'FastqSync';
+export const FASTQ_SET_SYNC_EVENT_DETAIL_TYPE = 'FastqSetSync';
 
 // External events to listen to
 export const FASTQ_STATE_CHANGE_EVENT_DETAIL_TYPE = 'FastqStateChange';
+export const FASTQ_SET_STATE_CHANGE_EVENT_DETAIL_TYPE = 'FastqSetStateChange';
 export const FASTQ_MANAGER_EVENT_SOURCE = 'orcabus.fastqmanager';
 
 // Events for unarchiving jobs

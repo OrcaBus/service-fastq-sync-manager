@@ -25,16 +25,15 @@ from orcabus_api_tools.fastq import get_fastq
 from fastq_sync_tools import (
     check_fastq_against_requirements_list,
     ContextNotEligibleError,
-    REQUIREMENT,
+    FASTQ_REQUIREMENT,
 )
-
 
 def handler(event, context):
     """
     Lambda handler function
     """
     fastq_id: str = event.get("fastqId")
-    requirements: List[REQUIREMENT] = event.get("requirements", [])
+    requirements: List[FASTQ_REQUIREMENT] = event.get("requirements", [])
     is_unarchiving_allowed: bool = event.get("isUnarchivingAllowed", False)
     has_active_readset_context: Optional[Dict[str, str]] = event.get("hasActiveReadSetContext", None)
 
