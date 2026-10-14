@@ -35,7 +35,9 @@ function buildLambda(scope: Construct, props: LambdaProps): LambdaObject {
     architecture: lambda.Architecture.ARM_64,
     index: lambdaNameToSnakeCase + '.py',
     handler: 'handler',
-    timeout: props.lambdaName === 'handleMessages' ? Duration.seconds(300) : Duration.seconds(60),
+    timeout: ['handleMessages', 'checkRunningJobsForFastqIdList'].includes(props.lambdaName)
+      ? Duration.seconds(300)
+      : Duration.seconds(60),
     memorySize: 2048,
     includeOrcabusApiToolsLayer: lambdaRequirements.needsOrcabusApiToolsLayer,
     durableConfig: lambdaRequirements.needsDurableFunctionWrapper
