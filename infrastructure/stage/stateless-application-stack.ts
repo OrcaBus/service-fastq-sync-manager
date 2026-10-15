@@ -3,6 +3,7 @@ import { Construct } from 'constructs';
 import { GitStack } from '@orcabus/platform-cdk-constructs/deployment-stack-pipeline';
 import { buildAllLambdas, buildFastqSyncToolsLayer } from './lambdas';
 import { buildAllStepFunctions } from './step-functions';
+import { initialiseTaskTokenForFastqSetIdSfnName } from './step-functions/interfaces';
 import { StatelessApplicationConfig } from './interfaces';
 
 import * as events from 'aws-cdk-lib/aws-events';
@@ -43,6 +44,7 @@ export class StatelessApplicationStack extends GitStack {
       fastqSyncLayer: fastqSyncToolsLayer,
       sqsQueue: sqsQueue,
       initialiseTaskTokenForFastqIdListSfnName: 'initialiseTaskTokenForFastqIdList',
+      initialiseTaskTokenForFastqSetIdSfnName: initialiseTaskTokenForFastqSetIdSfnName,
       ...props,
     });
 

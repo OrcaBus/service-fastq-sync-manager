@@ -1,0 +1,73 @@
+{
+  "Comment": "Launch requirements for a Fastq Set ID",
+  "StartAt": "Save vars",
+  "States": {
+    "Save vars": {
+      "Type": "Pass",
+      "Next": "Needs Fingerprint",
+      "Assign": {
+        "fastqSetId": "{% $states.input.fastqSetId %}",
+        "requirements": "{% $states.input.requirements %}",
+        "waitForBam": "{% $states.input.waitForBam ? $states.input.waitForBam : false %}"
+      }
+    },
+    "Needs Fingerprint": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Wait for BAM check",
+          "Condition": "{% \"hasFingerprint\" in $requirements %}"
+        }
+      ],
+      "Default": "No fingerprint requirement"
+    },
+    "Wait for BAM check": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Next": "Wait for BAM (no-op)",
+          "Condition": "{% $waitForBam = true %}",
+          "Comment": "waitForBam=true - do not call runExtractFingerprint"
+        }
+      ],
+      "Default": "Launch Fingerprint Job"
+    },
+    "Launch Fingerprint Job": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Output": "{% $states.result.Payload %}",
+      "Arguments": {
+        "FunctionName": "${__launch_fastq_set_requirement_job_lambda_function_arn__}",
+        "Payload": {
+          "fastqSetId": "{% $fastqSetId %}",
+          "requirementType": "hasFingerprint",
+          "waitForBam": "{% $waitForBam %}"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "End": true
+    },
+    "Wait for BAM (no-op)": {
+      "Type": "Pass",
+      "End": true
+    },
+    "No fingerprint requirement": {
+      "Type": "Pass",
+      "End": true
+    }
+  },
+  "QueryLanguage": "JSONata"
+}

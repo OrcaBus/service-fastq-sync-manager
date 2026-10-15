@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "fastq sync request",
+  "type": "object",
+  "properties": {
+    "EventBusName": {
+      "type": "string"
+    },
+    "Source": {
+      "type": "string"
+    },
+    "DetailType": {
+      "type": "string"
+    },
+    "Detail": {
+      "type": "object",
+      "properties": {
+        "taskToken": {
+          "type": "string"
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "fastqSet": {
+              "type": "string"
+            },
+            "requirements": {
+              "type": "object",
+              "properties": {
+                "hasFingerprint": {
+                  "type": "boolean"
+                }
+              },
+              "required": []
+            },
+            "forceUnarchiving": {
+              "type": "boolean"
+            },
+            "waitForBam": {
+              "type": "boolean"
+            }
+          },
+          "required": ["requirements", "fastqSet"]
+        }
+      },
+      "required": ["taskToken", "payload"]
+    }
+  },
+  "required": ["EventBusName", "Source", "DetailType", "Detail"]
+}

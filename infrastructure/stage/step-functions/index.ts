@@ -12,7 +12,9 @@ import * as cdk from 'aws-cdk-lib';
 // Local interfaces
 import {
   initialiseTaskTokenForFastqIdListSfnName,
+  initialiseTaskTokenForFastqSetIdSfnName,
   launchFastqListRowRequirementsSfnName,
+  launchFastqSetRequirementsSfnName,
   SfnObject,
   SfnProps,
   SfnPropsWithObject,
@@ -57,6 +59,10 @@ function createStateMachineDefinitionSubstitutions(props: SfnProps): {
       `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:stateMachine:${STACK_PREFIX}--${launchFastqListRowRequirementsSfnName}`;
     definitionSubstitutions['__initialise_task_token_for_fastq_id_list_sfn_arn__'] =
       `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:stateMachine:${STACK_PREFIX}--${initialiseTaskTokenForFastqIdListSfnName}`;
+    definitionSubstitutions['__launch_fastq_set_requirements_sfn_arn__'] =
+      `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:stateMachine:${STACK_PREFIX}--${launchFastqSetRequirementsSfnName}`;
+    definitionSubstitutions['__initialise_task_token_for_fastq_set_id_sfn_arn__'] =
+      `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:stateMachine:${STACK_PREFIX}--${initialiseTaskTokenForFastqSetIdSfnName}`;
   }
 
   if (sfnRequirements.needsHeartBeatRuleSwitchAccess) {
@@ -206,6 +212,26 @@ function wireUpStateMachinePermissions(scope: Construct, props: SfnPropsWithObje
       true
     );
   }
+
+  if (props.stateMachineName === 'initialiseTaskTokenForFastqSetId') {
+    /* Get the lambda object */
+    const handleSqsMessagesLambdaObject = <LambdaObject>(
+      props.lambdaObjects.find((lambdaObject) => lambdaObject.lambdaName === 'handleMessages')
+    );
+    /* Grant permissions to the lambda object */
+    props.stateMachineObj.grantStartExecution(handleSqsMessagesLambdaObject.lambdaFunction);
+
+    NagSuppressions.addResourceSuppressions(
+      props.stateMachineObj,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Needs permissions to start execution',
+        },
+      ],
+      true
+    );
+  }
 }
 
 function buildStepFunction(scope: Construct, props: SfnProps): SfnObject {
@@ -282,6 +308,8 @@ export function buildAllStepFunctions(scope: Construct, props: SfnsProps): SfnOb
           resources: [
             `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:stateMachine:${STACK_PREFIX}--${launchFastqListRowRequirementsSfnName}`,
             `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:stateMachine:${STACK_PREFIX}--${initialiseTaskTokenForFastqIdListSfnName}`,
+            `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:stateMachine:${STACK_PREFIX}--${launchFastqSetRequirementsSfnName}`,
+            `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:stateMachine:${STACK_PREFIX}--${initialiseTaskTokenForFastqSetIdSfnName}`,
           ],
           actions: ['states:StartExecution'],
         })

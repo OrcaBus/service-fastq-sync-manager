@@ -13,6 +13,9 @@ export type LambdaName =
   // Launch Fastq List Row Requirements
   | 'getFastqAndRemainingRequirements'
   | 'launchRequirementJob'
+  // Fastq Set functions
+  | 'checkFastqSetIdAgainstRequirements'
+  | 'launchFastqSetRequirementJob'
   // Non sfn functions
   | 'handleMessages';
 
@@ -26,6 +29,9 @@ export const lambdaNameList: LambdaName[] = [
   // Launch Fastq List Row Requirements
   'getFastqAndRemainingRequirements',
   'launchRequirementJob',
+  // Fastq Set functions
+  'checkFastqSetIdAgainstRequirements',
+  'launchFastqSetRequirementJob',
   // Non sfn functions
   'handleMessages',
 ];
@@ -60,6 +66,15 @@ export const lambdaRequirementsMap: Record<LambdaName, LambdaRequirements> = {
     needsOrcabusApiToolsLayer: true,
     needsFastqSyncLayer: true,
   },
+  // Fastq Set functions
+  checkFastqSetIdAgainstRequirements: {
+    needsOrcabusApiToolsLayer: true,
+    needsFastqSyncLayer: true,
+  },
+  launchFastqSetRequirementJob: {
+    needsOrcabusApiToolsLayer: true,
+    needsFastqSyncLayer: true,
+  },
   // Non sfn functions
   handleMessages: {
     needsDurableFunctionWrapper: true,
@@ -70,6 +85,7 @@ export interface BuildAllLambdaProps {
   fastqSyncLayer: LayerVersion;
   sqsQueue: IQueue;
   initialiseTaskTokenForFastqIdListSfnName: StepFunctionsName;
+  initialiseTaskTokenForFastqSetIdSfnName: StepFunctionsName;
   pipelineCacheBucket: string;
   pipelineCachePrefix: string;
   testDataBucket: string;

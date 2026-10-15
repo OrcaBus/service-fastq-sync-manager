@@ -15,7 +15,11 @@ export type EventTargets =
   // Fastq Unarchiving updated
   | 'fastqUnarchivingJobStateChangeToFastqIdUpdatedSfn'
   // Scheduler
-  | 'heartBeatMonitorSchedulerToExternalHeartBeatMonitorSfn';
+  | 'heartBeatMonitorSchedulerToExternalHeartBeatMonitorSfn'
+  // Fastq Set state change to Fastq Set ID Updated SFN
+  | 'fastqSetStateChangeToFastqSetIdUpdatedSfn'
+  // Fastq Set sync task token to Fastq Set Initialiser SFN
+  | 'fastqSetSyncTaskTokenToFastqSetInitialiserSfn';
 
 export const eventTargetsList: EventTargets[] = [
   // Task token requests to sfns
@@ -26,6 +30,10 @@ export const eventTargetsList: EventTargets[] = [
   'fastqUnarchivingJobStateChangeToFastqIdUpdatedSfn',
   // Scheduler
   'heartBeatMonitorSchedulerToExternalHeartBeatMonitorSfn',
+  // Fastq Set state change to Fastq Set ID Updated SFN
+  'fastqSetStateChangeToFastqSetIdUpdatedSfn',
+  // Fastq Set sync task token to Fastq Set Initialiser SFN
+  'fastqSetSyncTaskTokenToFastqSetInitialiserSfn',
 ];
 
 export interface AddSfnAsEventBridgeTargetProps {

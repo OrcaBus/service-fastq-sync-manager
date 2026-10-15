@@ -9,8 +9,11 @@ import { HEART_BEAT_SCHEDULER_RULE_NAME } from '../constants';
 export type EventRuleName =
   // Task Token Initialised rules
   | 'fastqSyncTaskTokenInitialisedRule'
+  | 'fastqSetSyncTaskTokenInitialisedRule'
   // Fastq List row updated
   | 'fastqStateChange'
+  // Fastq Set state change
+  | 'fastqSetStateChange'
   // Fastq Unarchiving updated
   | 'fastqUnarchivingStateChange'
   // Internal Heartbeat
@@ -19,8 +22,11 @@ export type EventRuleName =
 export const eventRuleNameList: EventRuleName[] = [
   // Task Token Initialised rules
   'fastqSyncTaskTokenInitialisedRule',
+  'fastqSetSyncTaskTokenInitialisedRule',
   // Fastq List row updated
   'fastqStateChange',
+  // Fastq Set state change
+  'fastqSetStateChange',
   // Fastq Unarchiving updated
   'fastqUnarchivingStateChange',
   // Internal Heartbeat

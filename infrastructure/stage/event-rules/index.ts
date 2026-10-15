@@ -3,6 +3,8 @@ import * as events from 'aws-cdk-lib/aws-events';
 import {
   DEFAULT_HEART_BEAT_INTERVAL,
   FASTQ_STATE_CHANGE_EVENT_DETAIL_TYPE,
+  FASTQ_SET_STATE_CHANGE_EVENT_DETAIL_TYPE,
+  FASTQ_SET_SYNC_EVENT_DETAIL_TYPE,
   FASTQ_SYNC_EVENT_DETAIL_TYPE,
 } from '../constants';
 import {
@@ -66,6 +68,34 @@ function createFastqUnarchivingJobStateChangeEventPattern(): EventPattern {
   };
 }
 
+/**
+ * Listen to Fastq Set state change events with SOMALIER_UPDATED status
+ */
+function createFastqSetStateChangeEventPattern(): EventPattern {
+  return {
+    source: [FASTQ_MANAGER_EVENT_SOURCE],
+    detailType: [FASTQ_SET_STATE_CHANGE_EVENT_DETAIL_TYPE],
+    detail: {
+      status: [{ 'equals-ignore-case': 'SOMALIER_UPDATED' }],
+    },
+  };
+}
+
+/**
+ * Listen to new fastq set sync task token initialised events
+ */
+function createFastqSetSyncTaskTokenInitialisedEventPattern(): EventPattern {
+  return {
+    detailType: [FASTQ_SET_SYNC_EVENT_DETAIL_TYPE],
+    detail: {
+      taskToken: [{ exists: true }],
+      payload: {
+        fastqSet: [{ exists: true }],
+      },
+    },
+  };
+}
+
 /* Heartbeat scheduler */
 function buildHeartBeatEventBridgeRule(
   scope: Construct,
@@ -121,6 +151,32 @@ export function buildAllEventRules(
             ruleName: eventRule,
             eventBus: props.eventBus,
             eventPattern: createFastqUnarchivingJobStateChangeEventPattern(),
+          }),
+        });
+        break;
+      }
+
+      // Fastq Set state change event
+      case 'fastqSetStateChange': {
+        eventRulesList.push({
+          ruleName: eventRule,
+          ruleObject: new events.Rule(scope, eventRule, {
+            ruleName: eventRule,
+            eventBus: props.eventBus,
+            eventPattern: createFastqSetStateChangeEventPattern(),
+          }),
+        });
+        break;
+      }
+
+      // Task token initialised for new fastq set sync event
+      case 'fastqSetSyncTaskTokenInitialisedRule': {
+        eventRulesList.push({
+          ruleName: eventRule,
+          ruleObject: new events.Rule(scope, eventRule, {
+            ruleName: eventRule,
+            eventBus: props.eventBus,
+            eventPattern: createFastqSetSyncTaskTokenInitialisedEventPattern(),
           }),
         });
         break;
