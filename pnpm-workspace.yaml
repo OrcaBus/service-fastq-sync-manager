@@ -9,6 +9,8 @@ minimumReleaseAgeExclude:
   - aws-cdk@2.1124.1
   - js-yaml@4.1.2
   - '@babel/core@7.29.1'
+  - glob@14.0.2
+  - minimatch@11.0.1
 overrides:
-  '@babel/core@<=7.29.0': ^7.29.1
-  js-yaml@<=4.1.1: ^4.1.2
+  glob@>=9.0.0 <=14.0.1: ^14.0.2
+  minimatch@>=7.0.0 <11.0.1: ^11.0.1
