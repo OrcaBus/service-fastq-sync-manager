@@ -24,7 +24,7 @@ from orcabus_api_tools.fastq import get_fastq
 from fastq_sync_tools import (
     check_fastq_list_against_requirements_list,
     validate_has_active_readset_input,
-    REQUIREMENT,
+    FASTQ_REQUIREMENT,
 )
 
 
@@ -36,7 +36,7 @@ def handler(event, context):
     :return:
     """
     fastq_id_list: List[str] = event.get("fastqIdList", [])
-    requirements: Union[List[REQUIREMENT], Dict[REQUIREMENT, Union[bool, Dict[str, str]]]] = event.get("requirements", None)
+    requirements: Union[List[FASTQ_REQUIREMENT], Dict[FASTQ_REQUIREMENT, Union[bool, Dict[str, str]]]] = event.get("requirements", None)
     is_unarchiving_allowed: bool = event.get("isUnarchivingAllowed", False)
 
     # Requirements is a required field
@@ -45,13 +45,13 @@ def handler(event, context):
 
     # Check if requirements is a list, and turn it into a dict of objects if so
     if isinstance(requirements, list):
-        requirements: Dict[REQUIREMENT, bool] = dict(map(
+        requirements: Dict[FASTQ_REQUIREMENT, bool] = dict(map(
             lambda req: (req, True),
             requirements
         ))
 
-    # Parse requirements dict into a List[REQUIREMENT] and extract context if present
-    requirements_list: List[REQUIREMENT] = []
+    # Parse requirements dict into a List[FASTQ_REQUIREMENT] and extract context if present
+    requirements_list: List[FASTQ_REQUIREMENT] = []
     has_active_readset_context: Optional[Dict[str, str]] = None
 
     for req_name, req_value in requirements.items():
@@ -80,7 +80,7 @@ def handler(event, context):
         else:
             # For other requirements, include if value is truthy
             if req_value:
-                requirements_list.append(cast(REQUIREMENT, req_name))
+                requirements_list.append(cast(FASTQ_REQUIREMENT, req_name))
 
     # Get fastqs
     try:

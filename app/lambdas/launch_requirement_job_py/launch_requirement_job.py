@@ -22,7 +22,7 @@ from orcabus_api_tools.fastq import (
 
 # Layer imports
 from fastq_sync_tools import (
-    REQUIREMENT,
+    FASTQ_REQUIREMENT,
     run_fastq_job,
     run_fastq_unarchiving_job,
     check_fastq_unarchiving_job,
@@ -39,7 +39,7 @@ def handler(event, context):
     """
     # Get inputs
     fastq_id = event['fastqId']
-    requirement_type: REQUIREMENT = event['requirementType']
+    requirement_type: FASTQ_REQUIREMENT = event['requirementType']
 
     # Get the fastq list row as an object
     fastq_obj = get_fastq(fastq_id, includeS3Details=True)

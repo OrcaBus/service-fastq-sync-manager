@@ -13,10 +13,14 @@ ACTIVE_STORAGE_CLASSES_TYPE = Literal[
 
 ACTIVE_STORAGE_CLASSES: List[ACTIVE_STORAGE_CLASSES_TYPE] = list(ACTIVE_STORAGE_CLASSES_TYPE.__args__)
 
-REQUIREMENT = Literal[
+FASTQ_REQUIREMENT = Literal[
     "hasActiveReadSet",
     "hasQc",
     "hasFingerprint",
     "hasFileCompressionInformation",
     "hasReadCountInformation",
+]
+
+FASTQ_SET_REQUIREMENT = Literal[
+    "hasFingerprint",
 ]

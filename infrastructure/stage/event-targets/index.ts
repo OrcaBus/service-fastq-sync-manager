@@ -38,6 +38,16 @@ function buildFastqIdUpdatedTargetFastqUnarchiving(props: AddSfnAsEventBridgeTar
   );
 }
 
+function buildFastqSetIdUpdatedTarget(props: AddSfnAsEventBridgeTargetProps): void {
+  props.eventBridgeRuleObj.addTarget(
+    new eventsTargets.SfnStateMachine(props.stateMachineObj, {
+      input: events.RuleTargetInput.fromObject({
+        fastqSetId: EventField.fromPath('$.detail.id'),
+      }),
+    })
+  );
+}
+
 export function buildAllEventBridgeTargets(props: EventBridgeTargetsProps) {
   /* Iterate over each event bridge rule and add the target */
   for (const eventBridgeTargetsName of eventTargetsList) {
@@ -88,6 +98,33 @@ export function buildAllEventBridgeTargets(props: EventBridgeTargetsProps) {
           )?.ruleObject,
           stateMachineObj: props.stepFunctionObjects.find(
             (sfnObject) => sfnObject.stateMachineName === 'externalHeartbeatMonitor'
+          )?.stateMachineObj,
+        });
+        break;
+      }
+
+      // Fastq Set state change → fastqSetIdUpdated SFN
+      case 'fastqSetStateChangeToFastqSetIdUpdatedSfn': {
+        buildFastqSetIdUpdatedTarget(<AddSfnAsEventBridgeTargetProps>{
+          eventBridgeRuleObj: props.eventBridgeRuleObjects.find(
+            (eventBridgeObject) => eventBridgeObject.ruleName === 'fastqSetStateChange'
+          )?.ruleObject,
+          stateMachineObj: props.stepFunctionObjects.find(
+            (sfnObject) => sfnObject.stateMachineName === 'fastqSetIdUpdated'
+          )?.stateMachineObj,
+        });
+        break;
+      }
+
+      // Fastq Set sync task token → sendFastqSyncRequestToQueue SFN
+      case 'fastqSetSyncTaskTokenToFastqSetInitialiserSfn': {
+        buildSfnEventBridgeTarget(<AddSfnAsEventBridgeTargetProps>{
+          eventBridgeRuleObj: props.eventBridgeRuleObjects.find(
+            (eventBridgeObject) =>
+              eventBridgeObject.ruleName === 'fastqSetSyncTaskTokenInitialisedRule'
+          )?.ruleObject,
+          stateMachineObj: props.stepFunctionObjects.find(
+            (sfnObject) => sfnObject.stateMachineName === 'sendFastqSyncRequestToQueue'
           )?.stateMachineObj,
         });
         break;

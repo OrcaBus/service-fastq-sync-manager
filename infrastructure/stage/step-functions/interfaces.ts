@@ -13,7 +13,11 @@ export type StepFunctionsName =
   // Listen to fastq related events to release task tokens
   | 'fastqIdUpdated'
   // External heartbeat monitoring
-  | 'externalHeartbeatMonitor';
+  | 'externalHeartbeatMonitor'
+  // Fastq Set sync
+  | 'initialiseTaskTokenForFastqSetId'
+  | 'launchFastqSetRequirements'
+  | 'fastqSetIdUpdated';
 
 export const stepFunctionsNames: StepFunctionsName[] = [
   // Initialisation
@@ -25,12 +29,19 @@ export const stepFunctionsNames: StepFunctionsName[] = [
   'fastqIdUpdated',
   // External heartbeat monitoring
   'externalHeartbeatMonitor',
+  // Fastq Set sync
+  'initialiseTaskTokenForFastqSetId',
+  'launchFastqSetRequirements',
+  'fastqSetIdUpdated',
 ];
 
 export const launchFastqListRowRequirementsSfnName: StepFunctionsName =
   'launchFastqListRowRequirements';
 export const initialiseTaskTokenForFastqIdListSfnName: StepFunctionsName =
   'initialiseTaskTokenForFastqIdList';
+export const launchFastqSetRequirementsSfnName: StepFunctionsName = 'launchFastqSetRequirements';
+export const initialiseTaskTokenForFastqSetIdSfnName: StepFunctionsName =
+  'initialiseTaskTokenForFastqSetId';
 
 export interface StepFunctionsRequirements {
   needsDbAccess?: boolean;
@@ -67,6 +78,19 @@ export const stepFunctionsRequirementsMap: Record<StepFunctionsName, StepFunctio
     needsHeartBeatRuleSwitchAccess: true,
     needsDistributedMapPermissions: true,
   },
+  // Fastq Set sync
+  initialiseTaskTokenForFastqSetId: {
+    needsDbAccess: true,
+    needsSfnExecutionAccess: true,
+    needsSendTaskExecutionAccess: true,
+    needsHeartBeatRuleSwitchAccess: true,
+  },
+  launchFastqSetRequirements: {},
+  fastqSetIdUpdated: {
+    needsDbAccess: true,
+    needsSfnExecutionAccess: true,
+    needsSendTaskExecutionAccess: true,
+  },
 };
 
 // Map the lambda functions to their step function names
@@ -79,6 +103,10 @@ export const stepFunctionLambdaMap: Record<StepFunctionsName, LambdaName[]> = {
     'checkRunningJobsForFastqIdList',
     'checkFastqIdListAgainstRequirements',
   ],
+  // Fastq Set sync
+  initialiseTaskTokenForFastqSetId: ['checkFastqSetIdAgainstRequirements', 'unlockCallbackId'],
+  launchFastqSetRequirements: ['launchFastqSetRequirementJob'],
+  fastqSetIdUpdated: ['checkFastqSetIdAgainstRequirements'],
 };
 
 export interface SfnsProps {
